@@ -1,55 +1,57 @@
 import { Link } from "react-router-dom";
-import { Users, Package, Bus, Route, FileText } from "lucide-react";
+import { Users, Bus, Route, ReceiptText, HandHelping, LogOut } from "lucide-react";
 
 const AdminSidebar = () => {
   const menuItems = [
-    { title: "Usuarios", path: "/admin/usuarios", icon: <Users size={20} /> },
-    { title: "Encomiendas", path: "/admin/encomiendas", icon: <Package size={20} /> },
-    { title: "Buses", path: "/admin/buses", icon: <Bus size={20} /> },
-    { title: "Rutas", path: "/admin/rutas", icon: <Route size={20} /> },
-    { title: "Facturación", path: "/admin/facturacion", icon: <FileText size={20} /> },
+    { title: "Usuarios", path: "/admin/usuarios", icon: <Users className="size-5 opacity-75" /> },
+    { title: "Servicios", path: "/admin/servicios", icon: <HandHelping className="size-5 opacity-75" /> },
+    { title: "Buses", path: "/admin/buses", icon: <Bus className="size-5 opacity-75" /> },
+    { title: "Rutas", path: "/admin/rutas", icon: <Route className="size-5 opacity-75" /> },
+    { title: "Ventas", path: "/admin/facturacion", icon: <ReceiptText className="size-5 opacity-75" /> },
   ];
 
   return (
-    <>
-      {/* Menú móvil inferior */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-blue-700 dark:bg-gray-800 text-white shadow-lg z-50">
-        <nav className="flex justify-around items-center h-16">
-          {menuItems.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className="flex flex-col items-center text-sm hover:text-yellow-300"
-            >
-              {item.icon}
-              <span>{item.title}</span>
-            </Link>
-          ))}
-        </nav>
-      </div>
+      <div className="hidden lg:flex h-screen w-16 flex-col justify-between border-e bg-white dark:bg-gray-800 dark:border-gray-700">
+        <div>
+          <div className="inline-flex size-16 items-center justify-center">
+            <span className="grid size-10 place-content-center rounded-lg">
+              <img src="../src/assets/react.svg" alt="logo" />
+            </span>
+          </div>
 
-      {/* Sidebar flotante para desktop */}
-      <div className="hidden lg:block fixed top-0 left-0 h-full bg-blue-700 dark:bg-gray-800 text-white w-64 shadow-lg z-50">
-        <h2 className="font-bold text-center text-2xl p-6 border-b border-blue-600">
-          <Link to="/admin">Tr4cking</Link>
-        </h2>
-        <nav className="mt-4">
-          <ul className="space-y-3 m-4 px-4">
-            {menuItems.map((item) => (
-              <li key={item.path}>
-                <Link
-                  to={item.path}
-                  className="flex items-center p-2 hover:bg-blue-600 rounded-lg transition-colors duration-200"
-                >
-                  <span className="mr-2">{item.icon}</span>
-                  {item.title}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
+          <div className="border-t border-gray-100 dark:border-gray-700">
+            <div className="px-2">
+              <ul className="space-y-1 pt-4">
+                {menuItems.map((item) => (
+                  <li key={item.path}>
+                    <Link
+                      to={item.path}
+                      className="group relative flex justify-center rounded-sm px-2 py-1.5 text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-700 dark:hover:text-white"
+                    >
+                      {item.icon}
+                      <span className="invisible absolute start-full top-1/2 ms-4 -translate-y-1/2 rounded-sm bg-gray-900 dark:bg-gray-700 px-2 py-1.5 text-xs font-medium text-white group-hover:visible">
+                        {item.title}
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div className="sticky inset-x-0 bottom-0 border-t border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 p-2">
+          <Link
+            to="/logout"
+            className="group relative flex w-full justify-center rounded-lg px-2 py-1.5 text-sm text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-700 dark:hover:text-white"
+          >
+            <LogOut className="size-5 opacity-75" />
+            <span className="invisible absolute start-full top-1/2 ms-4 -translate-y-1/2 rounded-sm bg-gray-900 dark:bg-gray-700 px-2 py-1.5 text-xs font-medium text-white group-hover:visible">
+              Logout
+            </span>
+          </Link>
+        </div>
       </div>
-    </>
   );
 };
 

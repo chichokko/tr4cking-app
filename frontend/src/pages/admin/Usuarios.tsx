@@ -1,11 +1,15 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { Edit, Trash } from "lucide-react";
+import { UsuarioDTO } from "../../shared/shared.types";
 
-const API_URL = "http://localhost:8000/api/usuarios/";
+const USUARIOS_API_URL = "http://127.0.0.1:8000/api/usuarios/";
+const AGENCIAS_API_URL = "http://127.0.0.1:8000/api/agencias/";
 
 const Usuarios = () => {
-  const [usuarios, setUsuarios] = useState<any[]>([]);
-  const [formData, setFormData] = useState({
+  const [usuarios, setUsuarios] = useState<UsuarioDTO[]>([]);
+  const [agencias, setAgencias] = useState<any[]>([]); // Estado para almacenar las agencias
+  const [formData, setFormData] = useState<Omit<UsuarioDTO, "id">>({
     username: "",
     email: "",
     dni: "",
@@ -16,17 +20,27 @@ const Usuarios = () => {
   });
   const [usuarioEditando, setUsuarioEditando] = useState<number | null>(null);
 
-  // Obtener usuarios al cargar la página
+  // Obtener usuarios y agencias al cargar la página
   useEffect(() => {
     fetchUsuarios();
+    fetchAgencias(); // Llamada para obtener las agencias
   }, []);
 
   const fetchUsuarios = async () => {
     try {
-      const response = await axios.get(API_URL);
+      const response = await axios.get(USUARIOS_API_URL);
       setUsuarios(response.data);
     } catch (error) {
       console.error("Error al obtener usuarios:", error);
+    }
+  };
+
+  const fetchAgencias = async () => {
+    try {
+      const response = await axios.get(AGENCIAS_API_URL);
+      setAgencias(response.data); // Guardar las agencias en el estado
+    } catch (error) {
+      console.error("Error al obtener agencias:", error);
     }
   };
 
@@ -35,9 +49,9 @@ const Usuarios = () => {
 
     try {
       if (usuarioEditando) {
-        await axios.put(`${API_URL}${usuarioEditando}/`, formData);
+        await axios.put(`${USUARIOS_API_URL}${usuarioEditando}/`, formData);
       } else {
-        await axios.post(API_URL, formData);
+        await axios.post(USUARIOS_API_URL, formData);
       }
 
       fetchUsuarios();
@@ -62,7 +76,7 @@ const Usuarios = () => {
 
   const handleDelete = async (id: number) => {
     try {
-      await axios.delete(`${API_URL}${id}/`);
+      await axios.delete(`${USUARIOS_API_URL}${id}/`);
       fetchUsuarios();
     } catch (error) {
       console.error("Error al eliminar usuario:", error);
@@ -83,7 +97,7 @@ const Usuarios = () => {
   };
 
   return (
-    <div className="p-6 dark:bg-gray-900 dark:text-white">
+    <div className="p-2 dark:bg-gray-900 dark:text-white">
       <h2 className="text-xl font-bold text-blue-600 dark:text-white mb-4">
         Gestión de Usuarios
       </h2>
@@ -137,8 +151,11 @@ const Usuarios = () => {
           onChange={(e) => setFormData({ ...formData, agencia: e.target.value })}
         >
           <option value="">Seleccione una agencia</option>
-          <option value="1">Agencia 1</option>
-          <option value="2">Agencia 2</option>
+          {agencias.map((agencia) => (
+            <option key={agencia.id} value={agencia.id}>
+              {agencia.nombre}
+            </option>
+          ))}
         </select>
         <select
           className="border p-2 rounded dark:bg-gray-700 dark:border-gray-600"
@@ -165,47 +182,51 @@ const Usuarios = () => {
       </form>
 
       {/* Tabla de Usuarios */}
-      <table className="w-full mt-4 border-collapse bg-white dark:bg-gray-800 shadow-md">
-        <thead>
-          <tr className="bg-gray-200 dark:bg-gray-700 dark:text-white">
-            <th className="p-2">Nombre</th>
-            <th className="p-2">Correo</th>
-            <th className="p-2">DNI</th>
-            <th className="p-2">Teléfono</th>
-            <th className="p-2">Dirección</th>
-            <th className="p-2">Agencia</th>
-            <th className="p-2">Rol</th>
-            <th className="p-2">Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {usuarios.map((usuario) => (
-            <tr key={usuario.id} className="border-t dark:border-gray-600">
-              <td className="p-2">{usuario.username}</td>
-              <td className="p-2">{usuario.email}</td>
-              <td className="p-2">{usuario.dni}</td>
-              <td className="p-2">{usuario.telefono}</td>
-              <td className="p-2">{usuario.direccion}</td>
-              <td className="p-2">{usuario.agencia}</td>
-              <td className="p-2">{usuario.rol}</td>
-              <td className="p-2">
-                <button
-                  className="text-yellow-500 mr-2"
-                  onClick={() => handleEdit(usuario)}
-                >
-                  Editar
-                </button>
-                <button
-                  className="text-red-500"
-                  onClick={() => handleDelete(usuario.id)}
-                >
-                  Eliminar
-                </button>
-              </td>
+      <div className="w-full overflow-x-auto py-4">
+        <table className="table w-full border-collapse bg-white dark:bg-gray-800 shadow-md">
+          <thead>
+            <tr className="bg-gray-200 dark:bg-gray-700 dark:text-white">
+              <th className="p-2">Nombre</th>
+              <th className="p-2">Correo</th>
+              <th className="p-2">DNI</th>
+              <th className="p-2">Teléfono</th>
+              <th className="p-2">Dirección</th>
+              <th className="p-2">Agencia</th>
+              <th className="p-2">Rol</th>
+              <th className="p-2">Acciones</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {usuarios.map((usuario) => (
+              <tr key={usuario.id} className="row-hover border-t dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700">
+                <td className="p-2">{usuario.username}</td>
+                <td className="p-2">{usuario.email}</td>
+                <td className="p-2">{usuario.dni}</td>
+                <td className="p-2">{usuario.telefono}</td>
+                <td className="p-2">{usuario.direccion}</td>
+                <td className="p-2">{usuario.agencia}</td>
+                <td className="p-2">{usuario.rol}</td>
+                <td className="p-2 flex space-x-2">
+                  <button
+                    className="btn btn-circle btn-text btn-sm text-yellow-500"
+                    aria-label="Editar"
+                    onClick={() => handleEdit(usuario)}
+                  >
+                    <Edit size={16} />
+                  </button>
+                  <button
+                    className="btn btn-circle btn-text btn-sm text-red-500"
+                    aria-label="Eliminar"
+                    onClick={() => handleDelete(usuario.id)}
+                  >
+                    <Trash size={16} />
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };

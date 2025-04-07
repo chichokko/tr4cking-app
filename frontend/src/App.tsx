@@ -5,6 +5,7 @@ import Usuarios from "./pages/admin/Usuarios";
 // import PrivateRoute from "./components/PrivateRoute";
 import Login from "./auth/Login";
 import EmpLayout from "./layouts/EmpLayout";
+import Facturacion from "./pages/admin/Facturacion";
 function App() {
   return (
     <Router>
@@ -16,6 +17,7 @@ function App() {
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<AdminDashboard />} />
           <Route path="usuarios" element={<Usuarios />} />
+          <Route path="facturacion" element={<Facturacion />} />
           <Route path="agencias" element={<div>Agencias</div>} />
           <Route path="encomiendas" element={<div>Encomiendas</div>} />
           <Route path="buses" element={<div>Buses</div>} />
