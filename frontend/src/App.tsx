@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import "./App.css";
 import AdminLayout from "./layouts/AdminLayout";
 import AdminDashboard from "./pages/admin/Dashboard";
 import Usuarios from "./pages/admin/Usuarios";
@@ -6,6 +7,11 @@ import Usuarios from "./pages/admin/Usuarios";
 import Login from "./auth/Login";
 import EmpLayout from "./layouts/EmpLayout";
 import Facturacion from "./pages/admin/Facturacion";
+import Empresas from "./pages/admin/Empresas";
+import Agencias from "./pages/admin/Agencias";
+import Localidades from "./pages/admin/Localidades";
+import Rutas from "./pages/admin/Rutas";
+import Horarios from "./pages/admin/Horarios";
 function App() {
   return (
     <Router>
@@ -18,10 +24,11 @@ function App() {
           <Route index element={<AdminDashboard />} />
           <Route path="usuarios" element={<Usuarios />} />
           <Route path="facturacion" element={<Facturacion />} />
-          <Route path="agencias" element={<div>Agencias</div>} />
-          <Route path="encomiendas" element={<div>Encomiendas</div>} />
-          <Route path="buses" element={<div>Buses</div>} />
-          <Route path="rutas" element={<div>Rutas</div>} />
+          <Route path="empresas" element={<Empresas />} />
+          <Route path="agencias" element={<Agencias />} />
+          <Route path="localidades" element={<Localidades />} />
+          <Route path="rutas" element={<Rutas />} />
+          <Route path="horarios" element={<Horarios />} />
         </Route>
 
         <Route path="/empleado" element={<EmpLayout />}>

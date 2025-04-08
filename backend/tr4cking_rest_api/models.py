@@ -96,8 +96,6 @@ class Cliente(models.Model):
     telefono = models.CharField(max_length=30)
     direccion = models.TextField()
     fecha_registro = models.DateTimeField(default=timezone.now)
-    registrado_por_empleado = models.BooleanField(default=False)
-
     @property
     def razon_social(self):
         if self.usuario:

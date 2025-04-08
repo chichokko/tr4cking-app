@@ -16,11 +16,11 @@ from .serializers import (
     DetalleFacturaSerializer, ParadaRutaSerializer, RutaConParadasSerializer
 )
 
-# Viewsets Básicos
-# Viewsets básicos
+
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+    filterset_fields = ['is_active', 'is_staff', 'groups']  # Permitir filtrar por grupos
 
 class GroupViewSet(viewsets.ModelViewSet):
     queryset = Group.objects.all()

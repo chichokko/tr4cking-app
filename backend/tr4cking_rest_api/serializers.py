@@ -11,16 +11,21 @@ class PermissionSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class GroupSerializer(serializers.ModelSerializer):
-    permissions = PermissionSerializer(many=True, read_only=True)
-    
+    permissions = serializers.PrimaryKeyRelatedField(
+        many=True, queryset=Permission.objects.all()
+    )  # Permitir asignar permisos
+
     class Meta:
         model = Group
         fields = '__all__'
 
+from django.contrib.auth.models import Group
+
 class UserSerializer(serializers.ModelSerializer):
-    groups = GroupSerializer(many=True, read_only=True)
-    user_permissions = PermissionSerializer(many=True, read_only=True)
-    
+    groups = serializers.PrimaryKeyRelatedField(
+        many=True, queryset=Group.objects.all()
+    )  # Permitir asignar grupos
+
     class Meta:
         model = User
         fields = [
@@ -39,10 +44,13 @@ class UserSerializer(serializers.ModelSerializer):
             'last_login'
         ]
         extra_kwargs = {
-            'password': {'write_only': True}
+            'password': {'write_only': True},
+            'is_staff': {'default': False},
+            'is_superuser': {'default': False}
         }
-    
+
     def create(self, validated_data):
+        groups = validated_data.pop('groups', [])
         user = User.objects.create_user(
             username=validated_data['username'],
             email=validated_data.get('email', ''),
@@ -50,7 +58,32 @@ class UserSerializer(serializers.ModelSerializer):
             first_name=validated_data.get('first_name', ''),
             last_name=validated_data.get('last_name', '')
         )
+        user.groups.set(groups)
+
+        # Verificar si el usuario pertenece al grupo "Administrador"
+        admin_group = Group.objects.filter(name="Administrador").first()
+        if admin_group and admin_group in user.groups.all():
+            user.is_staff = True
+            user.is_superuser = True
+            user.save()
+
         return user
+
+    def update(self, instance, validated_data):
+        groups = validated_data.pop('groups', None)
+        if groups is not None:
+            instance.groups.set(groups)
+
+            # Verificar si el usuario pertenece al grupo "Administrador"
+            admin_group = Group.objects.filter(name="Administrador").first()
+            if admin_group and admin_group in instance.groups.all():
+                instance.is_staff = True
+                instance.is_superuser = True
+            else:
+                instance.is_staff = False
+                instance.is_superuser = False
+
+        return super().update(instance, validated_data)
 
 class EmpresaSerializer(serializers.ModelSerializer):
     class Meta:

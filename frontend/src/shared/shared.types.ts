@@ -4,8 +4,8 @@ export interface UsuarioDTO {
     first_name: string;
     last_name: string;
     email: string;
-    is_staff: boolean;
     is_active: boolean;
+    groups: number[]; // IDs de grupos
     date_joined: string; // ISO 8601 DateTime
     last_login: string | null; // ISO 8601 DateTime
   }
@@ -50,8 +50,8 @@ export interface Empresa {
   
   export interface Ruta {
     id: number;
-    origen: number; // ID de Localidad
-    destino: number; // ID de Localidad
+    origen: number | null; // ID de Localidad
+    destino: number | null; // ID de Localidad
     codigo: string;
     duracion_estimada: string; // ISO 8601 Duration
     distancia_km: number;

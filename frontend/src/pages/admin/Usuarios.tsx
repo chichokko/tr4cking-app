@@ -1,28 +1,31 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { Edit, Trash } from "lucide-react";
-import { UsuarioDTO } from "../../shared/shared.types";
+import { UsuarioDTO, Grupo } from "../../shared/shared.types";
 
 const USUARIOS_API_URL = "http://127.0.0.1:8000/api/users/";
+const GRUPOS_API_URL = "http://127.0.0.1:8000/api/groups/";
 
 const Usuarios = () => {
   const [usuarios, setUsuarios] = useState<UsuarioDTO[]>([]);
+  const [grupos, setGrupos] = useState<Grupo[]>([]);
   const [formData, setFormData] = useState<
-    Omit<UsuarioDTO, "id" | "date_joined" | "last_login"> & { password?: string }
+    Omit<UsuarioDTO, "id" | "date_joined" | "last_login" | "groups"> & { password?: string; group: number | null }
   >({
     username: "",
     first_name: "",
     last_name: "",
     email: "",
-    is_staff: false,
     is_active: true,
     password: "",
+    group: null,
   });
   const [usuarioEditando, setUsuarioEditando] = useState<number | null>(null);
 
-  // Obtener usuarios al cargar la página
+  // Obtener usuarios y grupos al cargar la página
   useEffect(() => {
     fetchUsuarios();
+    fetchGrupos();
   }, []);
 
   const fetchUsuarios = async () => {
@@ -34,15 +37,27 @@ const Usuarios = () => {
     }
   };
 
+  const fetchGrupos = async () => {
+    try {
+      const response = await axios.get(GRUPOS_API_URL);
+      setGrupos(response.data);
+    } catch (error) {
+      console.error("Error al obtener grupos:", error);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
+      const { group, ...data } = formData;
+      const payload = { ...data, groups: group ? [group] : [] };
+
       if (usuarioEditando) {
-        const { password, ...data } = formData; // Excluir contraseña si está vacía al editar
-        await axios.put(`${USUARIOS_API_URL}${usuarioEditando}/`, password ? formData : data);
+        const { password, ...updateData } = payload; // Excluir contraseña si está vacía al editar
+        await axios.put(`${USUARIOS_API_URL}${usuarioEditando}/`, password ? payload : updateData);
       } else {
-        await axios.post(USUARIOS_API_URL, formData);
+        await axios.post(USUARIOS_API_URL, payload);
       }
 
       fetchUsuarios();
@@ -58,8 +73,8 @@ const Usuarios = () => {
       first_name: usuario.first_name,
       last_name: usuario.last_name,
       email: usuario.email,
-      is_staff: usuario.is_staff,
       is_active: usuario.is_active,
+      group: usuario.groups.length > 0 ? usuario.groups[0] : null,
     });
     setUsuarioEditando(usuario.id);
   };
@@ -79,9 +94,9 @@ const Usuarios = () => {
       first_name: "",
       last_name: "",
       email: "",
-      is_staff: false,
       is_active: true,
       password: "",
+      group: null,
     });
     setUsuarioEditando(null);
   };
@@ -140,19 +155,23 @@ const Usuarios = () => {
         <label className="flex items-center space-x-2">
           <input
             type="checkbox"
-            checked={formData.is_staff}
-            onChange={(e) => setFormData({ ...formData, is_staff: e.target.checked })}
-          />
-          <span>Es administrador</span>
-        </label>
-        <label className="flex items-center space-x-2">
-          <input
-            type="checkbox"
             checked={formData.is_active}
             onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
           />
           <span>Está activo</span>
         </label>
+        <select
+          className="border p-2 rounded dark:bg-gray-700 dark:border-gray-600"
+          value={formData.group || ""}
+          onChange={(e) => setFormData({ ...formData, group: e.target.value ? Number(e.target.value) : null })}
+        >
+          <option value="">Seleccionar grupo</option>
+          {grupos.map((grupo) => (
+            <option key={grupo.id} value={grupo.id}>
+              {grupo.name}
+            </option>
+          ))}
+        </select>
         <div className="flex space-x-2">
           <button className="bg-blue-500 text-white px-4 py-2 rounded">
             {usuarioEditando ? "Actualizar" : "Agregar"}
@@ -169,7 +188,7 @@ const Usuarios = () => {
         </div>
       </form>
 
-      {/* Tabla o Listado: */}
+      {/* Tabla de Usuarios */}
       <div className="w-full overflow-x-auto py-4">
         <table className="table w-full border-collapse bg-white dark:bg-gray-800 shadow-md">
           <thead>
@@ -178,7 +197,7 @@ const Usuarios = () => {
               <th className="p-2">Nombre</th>
               <th className="p-2">Apellido</th>
               <th className="p-2">Correo</th>
-              <th className="p-2">Es administrador</th>
+              <th className="p-2">Grupo</th>
               <th className="p-2">Está activo</th>
               <th className="p-2">Acciones</th>
             </tr>
@@ -193,7 +212,11 @@ const Usuarios = () => {
                 <td className="p-2">{usuario.first_name}</td>
                 <td className="p-2">{usuario.last_name}</td>
                 <td className="p-2">{usuario.email}</td>
-                <td className="p-2">{usuario.is_staff ? "Sí" : "No"}</td>
+                <td className="p-2">
+                  {usuario.groups.length > 0
+                    ? grupos.find((g) => g.id === usuario.groups[0])?.name || "N/A"
+                    : "N/A"}
+                </td>
                 <td className="p-2">{usuario.is_active ? "Sí" : "No"}</td>
                 <td className="p-2 flex space-x-2">
                   <button
