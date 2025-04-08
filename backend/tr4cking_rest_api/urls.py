@@ -5,6 +5,9 @@ from . import views
 router = DefaultRouter()
 
 #Endpoints
+router.register(r'users', views.UserViewSet)
+router.register(r'groups', views.GroupViewSet)
+router.register(r'permissions', views.PermissionViewSet)
 router.register(r'empresas', views.EmpresaViewSet)
 router.register(r'localidades', views.LocalidadViewSet)
 router.register(r'agencias', views.AgenciaViewSet)

@@ -1,9 +1,56 @@
 from rest_framework import serializers
 from .models import (
-    Empresa, Localidad, Agencia, Ruta, Bus, Asiento, Horario,
+    Permission, Group, User, Empresa, Localidad, Agencia, Ruta, Bus, Asiento, Horario,
     Viaje, Cliente, Empleado, Servicio, TipoDocumento, Timbrado,
     CabeceraFactura, DetalleFactura, ParadaRuta
 )
+
+class PermissionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Permission
+        fields = '__all__'
+
+class GroupSerializer(serializers.ModelSerializer):
+    permissions = PermissionSerializer(many=True, read_only=True)
+    
+    class Meta:
+        model = Group
+        fields = '__all__'
+
+class UserSerializer(serializers.ModelSerializer):
+    groups = GroupSerializer(many=True, read_only=True)
+    user_permissions = PermissionSerializer(many=True, read_only=True)
+    
+    class Meta:
+        model = User
+        fields = [
+            'id',
+            'username',
+            'first_name',
+            'last_name',
+            'email',
+            'password',
+            'is_active',
+            'is_staff',
+            'is_superuser',
+            'groups',
+            'user_permissions',
+            'date_joined',
+            'last_login'
+        ]
+        extra_kwargs = {
+            'password': {'write_only': True}
+        }
+    
+    def create(self, validated_data):
+        user = User.objects.create_user(
+            username=validated_data['username'],
+            email=validated_data.get('email', ''),
+            password=validated_data['password'],
+            first_name=validated_data.get('first_name', ''),
+            last_name=validated_data.get('last_name', '')
+        )
+        return user
 
 class EmpresaSerializer(serializers.ModelSerializer):
     class Meta:

@@ -2,11 +2,13 @@ from rest_framework import viewsets, generics
 from rest_framework.response import Response
 from django.db.models import Prefetch
 from .models import (
+    User, Group, Permission,
     Empresa, Localidad, Agencia, Ruta, Bus, Asiento, Horario,
     Viaje, Cliente, Empleado, Servicio, TipoDocumento, Timbrado,
     CabeceraFactura, DetalleFactura, ParadaRuta
 )
 from .serializers import (
+    UserSerializer, GroupSerializer, PermissionSerializer,
     EmpresaSerializer, LocalidadSerializer, AgenciaSerializer,
     RutaSerializer, BusSerializer, AsientoSerializer, HorarioSerializer,
     ViajeSerializer, ClienteSerializer, EmpleadoSerializer, ServicioSerializer,
@@ -15,6 +17,19 @@ from .serializers import (
 )
 
 # Viewsets Básicos
+# Viewsets básicos
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+class GroupViewSet(viewsets.ModelViewSet):
+    queryset = Group.objects.all()
+    serializer_class = GroupSerializer
+
+class PermissionViewSet(viewsets.ModelViewSet):
+    queryset = Permission.objects.all()
+    serializer_class = PermissionSerializer
+
 class EmpresaViewSet(viewsets.ModelViewSet):
     queryset = Empresa.objects.all()
     serializer_class = EmpresaSerializer

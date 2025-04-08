@@ -3,27 +3,26 @@ import axios from "axios";
 import { Edit, Trash } from "lucide-react";
 import { UsuarioDTO } from "../../shared/shared.types";
 
-const USUARIOS_API_URL = "http://127.0.0.1:8000/api/usuarios/";
-const AGENCIAS_API_URL = "http://127.0.0.1:8000/api/agencias/";
+const USUARIOS_API_URL = "http://127.0.0.1:8000/api/users/";
 
 const Usuarios = () => {
   const [usuarios, setUsuarios] = useState<UsuarioDTO[]>([]);
-  const [agencias, setAgencias] = useState<any[]>([]); // Estado para almacenar las agencias
-  const [formData, setFormData] = useState<Omit<UsuarioDTO, "id">>({
+  const [formData, setFormData] = useState<
+    Omit<UsuarioDTO, "id" | "date_joined" | "last_login"> & { password?: string }
+  >({
     username: "",
+    first_name: "",
+    last_name: "",
     email: "",
-    dni: "",
-    telefono: "",
-    direccion: "",
-    agencia: "",
-    rol: "empleado",
+    is_staff: false,
+    is_active: true,
+    password: "",
   });
   const [usuarioEditando, setUsuarioEditando] = useState<number | null>(null);
 
-  // Obtener usuarios y agencias al cargar la página
+  // Obtener usuarios al cargar la página
   useEffect(() => {
     fetchUsuarios();
-    fetchAgencias(); // Llamada para obtener las agencias
   }, []);
 
   const fetchUsuarios = async () => {
@@ -35,21 +34,13 @@ const Usuarios = () => {
     }
   };
 
-  const fetchAgencias = async () => {
-    try {
-      const response = await axios.get(AGENCIAS_API_URL);
-      setAgencias(response.data); // Guardar las agencias en el estado
-    } catch (error) {
-      console.error("Error al obtener agencias:", error);
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
       if (usuarioEditando) {
-        await axios.put(`${USUARIOS_API_URL}${usuarioEditando}/`, formData);
+        const { password, ...data } = formData; // Excluir contraseña si está vacía al editar
+        await axios.put(`${USUARIOS_API_URL}${usuarioEditando}/`, password ? formData : data);
       } else {
         await axios.post(USUARIOS_API_URL, formData);
       }
@@ -61,15 +52,14 @@ const Usuarios = () => {
     }
   };
 
-  const handleEdit = (usuario: any) => {
+  const handleEdit = (usuario: UsuarioDTO) => {
     setFormData({
       username: usuario.username,
+      first_name: usuario.first_name,
+      last_name: usuario.last_name,
       email: usuario.email,
-      dni: usuario.dni,
-      telefono: usuario.telefono,
-      direccion: usuario.direccion,
-      agencia: usuario.agencia,
-      rol: usuario.rol,
+      is_staff: usuario.is_staff,
+      is_active: usuario.is_active,
     });
     setUsuarioEditando(usuario.id);
   };
@@ -86,12 +76,12 @@ const Usuarios = () => {
   const resetForm = () => {
     setFormData({
       username: "",
+      first_name: "",
+      last_name: "",
       email: "",
-      dni: "",
-      telefono: "",
-      direccion: "",
-      agencia: "",
-      rol: "empleado",
+      is_staff: false,
+      is_active: true,
+      password: "",
     });
     setUsuarioEditando(null);
   };
@@ -116,6 +106,22 @@ const Usuarios = () => {
           required
         />
         <input
+          type="text"
+          placeholder="Nombre"
+          className="border p-2 rounded dark:bg-gray-700 dark:border-gray-600"
+          value={formData.first_name}
+          onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+          required
+        />
+        <input
+          type="text"
+          placeholder="Apellido"
+          className="border p-2 rounded dark:bg-gray-700 dark:border-gray-600"
+          value={formData.last_name}
+          onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+          required
+        />
+        <input
           type="email"
           placeholder="Correo Electrónico"
           className="border p-2 rounded dark:bg-gray-700 dark:border-gray-600"
@@ -124,47 +130,29 @@ const Usuarios = () => {
           required
         />
         <input
-          type="text"
-          placeholder="DNI"
+          type="password"
+          placeholder="Contraseña"
           className="border p-2 rounded dark:bg-gray-700 dark:border-gray-600"
-          value={formData.dni}
-          onChange={(e) => setFormData({ ...formData, dni: e.target.value })}
-          required
+          value={formData.password || ""}
+          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+          required={!usuarioEditando} // Obligatorio solo al crear
         />
-        <input
-          type="text"
-          placeholder="Teléfono"
-          className="border p-2 rounded dark:bg-gray-700 dark:border-gray-600"
-          value={formData.telefono}
-          onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
-        />
-        <input
-          type="text"
-          placeholder="Dirección"
-          className="border p-2 rounded dark:bg-gray-700 dark:border-gray-600"
-          value={formData.direccion}
-          onChange={(e) => setFormData({ ...formData, direccion: e.target.value })}
-        />
-        <select
-          className="border p-2 rounded dark:bg-gray-700 dark:border-gray-600"
-          value={formData.agencia}
-          onChange={(e) => setFormData({ ...formData, agencia: e.target.value })}
-        >
-          <option value="">Seleccione una agencia</option>
-          {agencias.map((agencia) => (
-            <option key={agencia.id} value={agencia.id}>
-              {agencia.nombre}
-            </option>
-          ))}
-        </select>
-        <select
-          className="border p-2 rounded dark:bg-gray-700 dark:border-gray-600"
-          value={formData.rol}
-          onChange={(e) => setFormData({ ...formData, rol: e.target.value })}
-        >
-          <option value="admin">Administrador</option>
-          <option value="empleado">Empleado</option>
-        </select>
+        <label className="flex items-center space-x-2">
+          <input
+            type="checkbox"
+            checked={formData.is_staff}
+            onChange={(e) => setFormData({ ...formData, is_staff: e.target.checked })}
+          />
+          <span>Es administrador</span>
+        </label>
+        <label className="flex items-center space-x-2">
+          <input
+            type="checkbox"
+            checked={formData.is_active}
+            onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+          />
+          <span>Está activo</span>
+        </label>
         <div className="flex space-x-2">
           <button className="bg-blue-500 text-white px-4 py-2 rounded">
             {usuarioEditando ? "Actualizar" : "Agregar"}
@@ -181,45 +169,46 @@ const Usuarios = () => {
         </div>
       </form>
 
-      {/* Tabla de Usuarios */}
+      {/* Tabla o Listado: */}
       <div className="w-full overflow-x-auto py-4">
         <table className="table w-full border-collapse bg-white dark:bg-gray-800 shadow-md">
           <thead>
             <tr className="bg-gray-200 dark:bg-gray-700 dark:text-white">
+              <th className="p-2">Nombre de usuario</th>
               <th className="p-2">Nombre</th>
+              <th className="p-2">Apellido</th>
               <th className="p-2">Correo</th>
-              <th className="p-2">DNI</th>
-              <th className="p-2">Teléfono</th>
-              <th className="p-2">Dirección</th>
-              <th className="p-2">Agencia</th>
-              <th className="p-2">Rol</th>
+              <th className="p-2">Es administrador</th>
+              <th className="p-2">Está activo</th>
               <th className="p-2">Acciones</th>
             </tr>
           </thead>
           <tbody>
             {usuarios.map((usuario) => (
-              <tr key={usuario.id} className="row-hover border-t dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700">
+              <tr
+                key={usuario.id}
+                className="row-hover border-t dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700"
+              >
                 <td className="p-2">{usuario.username}</td>
+                <td className="p-2">{usuario.first_name}</td>
+                <td className="p-2">{usuario.last_name}</td>
                 <td className="p-2">{usuario.email}</td>
-                <td className="p-2">{usuario.dni}</td>
-                <td className="p-2">{usuario.telefono}</td>
-                <td className="p-2">{usuario.direccion}</td>
-                <td className="p-2">{usuario.agencia}</td>
-                <td className="p-2">{usuario.rol}</td>
+                <td className="p-2">{usuario.is_staff ? "Sí" : "No"}</td>
+                <td className="p-2">{usuario.is_active ? "Sí" : "No"}</td>
                 <td className="p-2 flex space-x-2">
                   <button
                     className="btn btn-circle btn-text btn-sm text-yellow-500"
                     aria-label="Editar"
                     onClick={() => handleEdit(usuario)}
                   >
-                    <Edit size={16} />
+                    <Edit size={20} />
                   </button>
                   <button
                     className="btn btn-circle btn-text btn-sm text-red-500"
                     aria-label="Eliminar"
                     onClick={() => handleDelete(usuario.id)}
                   >
-                    <Trash size={16} />
+                    <Trash size={20} />
                   </button>
                 </td>
               </tr>
