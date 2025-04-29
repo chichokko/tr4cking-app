@@ -85,7 +85,7 @@ WSGI_APPLICATION = 'core.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'tr4cking',
+        'NAME': 'tr4cking_db',
         'USER': 'postgres',
         'PASSWORD': 'admin',
         'HOST': 'localhost',

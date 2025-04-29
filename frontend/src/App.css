@@ -1,5 +1,0 @@
-@import "tailwindcss";
-
-.hidden-scrollbar {
-    overflow-y: overlay;
-  }

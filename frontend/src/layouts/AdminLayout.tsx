@@ -5,7 +5,7 @@ const AdminLayout = () => {
   return (
     <div className="flex h-screen overflow-hidden hidden-scrollbar">
       {/* Sidebar scrolleable */}
-      <div className="h-full w-64 overflow-y-auto overflow-x-hidden">
+      <div className="hidden lg:block h-full w-64 overflow-y-auto overflow-x-hidden">
         <AdminSidebar />
       </div>
 

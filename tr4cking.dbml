@@ -1,0 +1,295 @@
+Project gestion_buses {
+  database_type: 'PostgreSQL'
+  Note: '''
+    Sistema de gestión de buses compatible con Django Auth:
+    - Usuarios autenticados usan auth_user de Django
+    - Clientes no registrados tienen tabla separada
+    - Facturación unificada para ambos casos
+  '''
+}
+
+// -----------------------------------------------
+// Módulo de Autenticación (Django estándar)
+// -----------------------------------------------
+Table auth_user {
+  id bigserial [pk]
+  password varchar(128) [not null]
+  last_login timestamp
+  is_superuser boolean [not null]
+  username varchar(150) [not null, unique]
+  first_name varchar(30) [not null]
+  last_name varchar(150) [not null]
+  email varchar(254) [not null, unique]
+  is_staff boolean [not null]
+  is_active boolean [not null]
+  date_joined timestamp [not null]
+}
+
+Table auth_group {
+  id bigserial [pk]
+  name varchar(150) [not null, unique]
+}
+
+Table auth_permission {
+  id bigserial [pk]
+  name varchar(255) [not null]
+  codename varchar(100) [not null, unique]
+  content_type_id integer [not null]
+}
+
+Table auth_user_groups {
+  id bigserial [pk]
+  user_id bigint [not null, ref: > auth_user.id]
+  group_id bigint [not null, ref: > auth_group.id]
+  indexes { (user_id, group_id) [unique] }
+}
+
+Table auth_user_user_permissions {
+  id bigserial [pk]
+  user_id bigint [not null, ref: > auth_user.id]
+  permission_id bigint [not null, ref: > auth_permission.id]
+  indexes { (user_id, permission_id) [unique] }
+}
+
+Table auth_group_permissions {
+  id bigserial [pk]
+  group_id bigint [not null, ref: > auth_group.id]
+  permission_id bigint [not null, ref: > auth_permission.id]
+  indexes { (group_id, permission_id) [unique] }
+}
+
+Table authtoken_token {
+  key varchar(40) [pk]
+  created timestamp [not null]
+  user_id bigint [not null, unique, ref: > auth_user.id]
+}
+
+// -----------------------------------------------
+// Módulo de Clientes (Solución para no registrados)
+// -----------------------------------------------
+Table Clientes {
+  id_cliente bigserial [pk]
+  id_usuario bigint [unique, null, ref: > auth_user.id]
+  ruc varchar(15) [note: "Es lo mismo que la cédula de identidad, pero para personas físicas."]
+  dv varchar(2) [note: "Dígito verificador (opcional)"]
+  razon_social varchar(100) [note: "Para facturación, prioridad: auth_user > cliente o empleado para casuales"]
+  telefono varchar(30) [not null]
+  direccion text [note: "Requerido para facturación"]
+  fecha_registro timestamp [not null, default: `now()`]
+  indexes {
+    ruc [unique]
+  }
+}
+
+// -----------------------------------------------
+// Módulo Geográfico
+// -----------------------------------------------
+Table Localidades {
+  id_localidad bigserial [pk]
+  nombre varchar(100) [not null]
+  coordenadas geography(Point, 4326)
+}
+
+// -----------------------------------------------
+// Módulo Empresarial
+// -----------------------------------------------
+Table Empresas {
+  id_empresa bigserial [pk]
+  nombre varchar(100) [not null, unique]
+  ruc varchar(20) [not null, unique]
+  telefono varchar(30)
+  email varchar(100)
+  direccion_legal text
+}
+
+// -----------------------------------------------
+// Módulo de Paradas
+// -----------------------------------------------
+Table Paradas {
+  id_parada bigserial [pk]
+  id_empresa bigint [not null, ref: > Empresas.id_empresa]
+  tipo_parada varchar(1) [not null, note: "Agencia: 'A', Parada de Bus: 'P', Terminal: 'T'"]
+  nombre text [not null, unique]
+  direccion text
+  telefono text
+  id_localidad bigint [not null, unique, ref: > Localidades.id_localidad]
+}
+
+Table Empleados {
+  id_empleado bigserial [pk]
+  id_usuario bigint [not null, unique, ref: > auth_user.id]
+  id_empresa bigint [not null, ref: > Empresas.id_empresa]
+  fecha_contratacion date [not null]
+  cargo varchar(100) [not null]
+  indexes {
+    id_usuario [unique]
+  }
+}
+
+// -----------------------------------------------
+// Módulo de Transporte
+// -----------------------------------------------
+Table Buses {
+  id_bus bigserial [pk]
+  placa text [not null, unique]
+  marca text
+  modelo text
+  capacidad int [not null]
+  estado text [not null, note: "Activo, Mantenimiento, Inactivo"]
+  id_empresa bigint [not null, ref: > Empresas.id_empresa]
+}
+
+// -----------------------------------------------
+// Módulo de Rutas
+// -----------------------------------------------
+Table Rutas {
+  id_ruta bigserial [pk]
+  duracion_total decimal(6,2) [not null]
+  distancia_km decimal(6,2) [not null]
+  precio_base decimal(10,2) [not null]
+  activo boolean [not null, default: true]
+  fecha_actualizacion timestamp [not null, default: `now()`]
+}
+
+Table DetalleRutas {
+  id_ruta bigint [not null, ref: > Rutas.id_ruta]
+  id_parada bigint [not null, ref: > Paradas.id_parada]
+  orden integer [not null, note: "Se guarda un numero de 1 si es origen, 2 si es segunda parada y así sucesivamente"]
+  indexes {
+    (id_ruta, id_parada) [pk]
+    (id_ruta, orden) [unique]
+  }
+}
+
+Table Horarios {
+  id_horario bigserial [pk]
+  id_ruta bigint [not null, ref: > Rutas.id_ruta]
+  hora_salida time [not null]
+  dias_semana varchar(7) [not null, note: "LMMJVSD (1=activo)"]
+  activo boolean [not null, default: true]
+  indexes {
+    (id_ruta, hora_salida) [unique]
+  }
+}
+
+Table Viajes {
+  id_viaje bigserial [pk]
+  id_horario bigint [not null, ref: > Horarios.id_horario]
+  id_bus bigint [not null, ref: > Buses.id_bus]
+  fecha date [not null]
+  activo boolean [not null, default: true, note: "activo o inactivo"]
+  observaciones text
+  indexes {
+    (id_bus, fecha, id_horario) [unique]
+  }
+}
+Table Asientos {
+  id_asiento bigserial [pk]
+  id_bus bigint [not null, ref: > Buses.id_bus]
+  numero_asiento int [not null]
+  estado text [not null, note: "Disponible, Reservado, Ocupado"]
+  tipo_asiento text [note: "Ejecutivo, Semi-cama, Cama"]
+  indexes { (id_bus, numero_asiento) [unique] }
+}
+
+// -----------------------------------------------
+// Módulo de Servicios
+// -----------------------------------------------
+Table Pasajes {
+  id_pasaje bigserial [pk]
+  id_viaje bigint [not null, ref: > Viajes.id_viaje] 
+  id_asiento bigint [not null, ref: > Asientos.id_asiento]
+}
+
+Table Encomiendas {
+  id_encomienda bigserial [pk]
+  id_viaje bigint [not null, ref: > Viajes.id_viaje]
+  id_origen bigint [not null, ref: > DetalleRutas.id_parada]
+  id_destino bigint [not null, ref: > DetalleRutas.id_parada]
+  flete varchar(30) [note: "'C': Contado ; 'CD': Contado en Destino"]
+  descripcion text [note: "Descripción de bultos o volúmenes"]
+}
+// -----------------------------------------------
+// Módulo de Facturación (adaptado para clientes no registrados)
+// -----------------------------------------------
+
+Table Timbrados {
+  id_timbrado bigserial [pk]
+  numero_timbrado text [not null, unique]
+  fecha_inicio date [not null]
+  fecha_fin date [not null]
+}
+
+Table CabeceraFactura {
+  id_factura bigserial [pk]
+  id_cliente bigint [ref: > Clientes.id_cliente, note: "Puede ser null para facturas genéricas"]
+  id_empleado bigint [not null, ref: > Empleados.id_empleado, note: "Empleado que generó la factura"]
+  id_timbrado bigint [not null, ref: > Timbrados.id_timbrado]
+  id_parada bigint [not null, ref: > Paradas.id_parada]
+  //datos:
+  numero_factura text [not null, unique]
+  fecha_factura date [not null]
+  condicion text [not null, default: "Contado"]
+  monto_total decimal(10,2) [not null]
+  monto_exenta decimal(10,2)
+  monto_iva_10 decimal(10,2)
+  monto_iva_5 decimal(10,2)
+  estado text [not null, note: "Emitida, Cancelada"]
+}
+
+Table DetallesFactura {
+  id_detalle bigserial [pk]
+  id_factura bigint [not null, ref: > CabeceraFactura.id_factura]
+  id_pasaje bigint [ref: > Pasajes.id_pasaje, null]
+  id_encomienda bigint [ref: > Encomiendas.id_encomienda, null]
+  cantidad smallint [not null, default: 1]
+  precio_unitario decimal(10,2) [not null]
+  descripcion varchar(100) [not null]
+  iva_porcentaje smallint [not null, note: "10, 5 o 0"]
+  subtotal decimal(12,2) [not null]
+}
+
+// Tabla opcional para auditoría/historial (SOLO si es requerido)
+Table HistorialFacturas {
+  id_historial bigserial [pk]
+  id_factura bigint [not null, ref: > CabeceraFactura.id_factura]
+  fecha_cambio timestamp [not null, default: `now()`]
+  campo_modificado varchar(30) [not null]
+  valor_anterior text
+  valor_nuevo text
+  id_empleado bigint [not null, ref: > Empleados.id_empleado]
+}
+
+// -----------------------------------------------
+// Módulo de Caja (igual que antes)
+// -----------------------------------------------
+Table Caja {
+  id_caja bigserial [pk]
+  nombre text [not null]
+  estado text [not null, note: "Abierta, Cerrada"]
+  fecha_creacion date [not null]
+}
+
+Table CabeceraCaja {
+  id_cab_caja bigserial [pk]
+  tipo_mov text [not null, note: "Apertura, Cierre, Arqueo"]
+  fecha_mov timestamp [not null]
+  monto_inical decimal [not null]
+  monto_final decimal [not null]
+  id_caja bigint [not null, ref: > Caja.id_caja]
+  id_empleado bigint [not null, ref: > Empleados.id_empleado]
+}
+
+Table DetalleCaja {
+  id_det_caja bigserial [pk]
+  descripcion text
+  tipo_transaccion text [not null, note: "Ingreso, Egreso"]
+  monto decimal [not null]
+  fecha_transaccion timestamp [not null]
+  id_factura bigint [ref: > CabeceraFactura.id_factura]
+  id_cab_caja bigint [not null, ref: > CabeceraCaja.id_cab_caja]
+}
+
+Ref: "Asientos"."estado" < "Asientos"."numero_asiento"
+
+Ref: "CabeceraCaja"."monto_inical" < "CabeceraCaja"."id_empleado"
