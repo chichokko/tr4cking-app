@@ -1,26 +1,31 @@
 # views.py
-from rest_framework import viewsets
+from rest_framework import viewsets, status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.response import Response
 from django.contrib.auth.models import User, Group, Permission
 from rest_framework.permissions import AllowAny
+from django.contrib.auth import get_user_model
+
 from .models import (
     Cliente, Localidad, Empresa, Sucursal, Parada, Empleado,
     Bus, Ruta, DetalleRuta, Horario, Viaje, Asiento,
     Pasaje, Encomienda
 )
 from .serializers import (
+    UserSerializer, GroupSerializer, PermissionSerializer,
     ClienteSerializer, LocalidadSerializer, EmpresaSerializer, SucursalSerializer,
     ParadaSerializer, EmpleadoSerializer, BusSerializer, RutaSerializer,
     DetalleRutaSerializer, HorarioSerializer, ViajeSerializer,
     AsientoSerializer, PasajeSerializer, EncomiendaSerializer
 )
 
-# views.py
-from django.contrib.auth.models import User, Group, Permission
-from rest_framework import viewsets
-from .serializers import UserSerializer, GroupSerializer, PermissionSerializer
-from rest_framework.permissions import IsAuthenticated
+User = get_user_model()
 
 class UserViewSet(viewsets.ModelViewSet):
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'is_active', 'is_staff', 'groups', 'user_permissions']
+    
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [AllowAny]
@@ -36,8 +41,11 @@ class PermissionViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [AllowAny]
 
 class ClienteViewSet(viewsets.ModelViewSet):
-    queryset = Cliente.objects.all()
+    queryset = Cliente.objects.select_related('usuario').all()
     serializer_class = ClienteSerializer
+
+    def get_queryset(self):
+        return Cliente.objects.select_related('usuario').all()
 
 class LocalidadViewSet(viewsets.ModelViewSet):
     queryset = Localidad.objects.all()

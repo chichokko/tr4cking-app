@@ -80,14 +80,13 @@ export interface Empresa {
   
   export interface Cliente {
     id: number;
-    usuario: number | null; // ID de Usuario
-    cedula: string;
+    usuario?: number; // ID de Usuario
     ruc: string | null;
-    dv: string | null;
+    dv?: string | null;
+    razonSocial: string;
     telefono: string;
     direccion: string;
     fecha_registro: string; // ISO 8601 DateTime
-    registrado_por_empleado: boolean;
   }
   
   export interface Empleado {

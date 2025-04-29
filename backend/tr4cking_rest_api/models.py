@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth.models import User, Group, Permission
 from django.db import models
 
@@ -12,7 +13,13 @@ from django.db import models
 # -----------------------------------------------
 class Cliente(models.Model):
     id_cliente = models.BigAutoField(primary_key=True)
-    usuario = models.OneToOneField('auth.User', on_delete=models.SET_NULL, null=True, blank=True)
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='cliente'
+    )
     ruc = models.CharField(max_length=15, unique=True)
     dv = models.CharField(max_length=2, blank=True, null=True)
     razon_social = models.CharField(max_length=100)

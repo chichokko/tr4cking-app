@@ -1,11 +1,15 @@
 # serializers.py
 from rest_framework import serializers
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User, Group, Permission
 from .models import (
     Cliente, Localidad, Empresa, Sucursal, Parada, Empleado,
     Bus, Ruta, DetalleRuta, Horario, Viaje, Asiento,
     Pasaje, Encomienda
 )
+
+User = get_user_model()
+
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -25,9 +29,13 @@ class PermissionSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'codename', 'content_type']
 
 class ClienteSerializer(serializers.ModelSerializer):
+    usuario_data = UserSerializer(read_only=True)
+
     class Meta:
         model = Cliente
-        fields = '__all__'
+        fields = ['id_cliente','usuario','usuario_data', 'ruc', 'dv', 
+                 'razon_social', 'telefono', 'direccion', 'fecha_registro']
+        read_only_fields = ('fecha_registro',)
 
 class LocalidadSerializer(serializers.ModelSerializer):
     class Meta:

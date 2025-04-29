@@ -13,6 +13,8 @@ import Localidades from "./pages/admin/Localidades";
 import Rutas from "./pages/admin/Rutas";
 import Horarios from "./pages/admin/Horarios";
 import Pasajes from "./pages/admin/Pasajes";
+import Clientes from "./pages/admin/Clientes";
+import Empleados from "./pages/admin/Empleados";
 
 function App() {
   return (
@@ -25,6 +27,8 @@ function App() {
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<AdminDashboard />} />
           <Route path="usuarios" element={<Usuarios />} />
+          <Route path="clientes" element={<Clientes />} />
+          <Route path="empleados" element={<Empleados />} />
           <Route path="facturacion" element={<Facturacion />} />
           <Route path="empresas" element={<Empresas />} />
           <Route path="agencias" element={<Agencias />} />
