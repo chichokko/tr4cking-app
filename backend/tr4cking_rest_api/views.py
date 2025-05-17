@@ -90,6 +90,13 @@ class ViajeViewSet(viewsets.ModelViewSet):
 class AsientoViewSet(viewsets.ModelViewSet):
     queryset = Asiento.objects.all()
     serializer_class = AsientoSerializer
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        bus_id = self.request.query_params.get('bus', None)
+        if bus_id is not None:
+            queryset = queryset.filter(bus_id=bus_id)
+        return queryset
 
 class PasajeViewSet(viewsets.ModelViewSet):
     queryset = Pasaje.objects.all()

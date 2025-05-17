@@ -33,7 +33,7 @@ class ClienteSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Cliente
-        fields = ['id_cliente','usuario','usuario_data', 'ruc', 'dv', 
+        fields = ['id','usuario','usuario_data', 'ruc', 'dv', 
                  'razon_social', 'telefono', 'direccion', 'fecha_registro']
         read_only_fields = ('fecha_registro',)
 
@@ -67,14 +67,19 @@ class BusSerializer(serializers.ModelSerializer):
         model = Bus
         fields = '__all__'
 
-class RutaSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Ruta
-        fields = '__all__'
 
 class DetalleRutaSerializer(serializers.ModelSerializer):
+    nombre_parada = serializers.CharField(source='parada.nombre', read_only=True)
+    
     class Meta:
         model = DetalleRuta
+        fields = ['id', 'parada', 'nombre_parada', 'orden']
+
+class RutaSerializer(serializers.ModelSerializer):
+    detalles = DetalleRutaSerializer(many=True, read_only=True)
+    
+    class Meta:
+        model = Ruta
         fields = '__all__'
 
 class HorarioSerializer(serializers.ModelSerializer):
@@ -83,6 +88,7 @@ class HorarioSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class ViajeSerializer(serializers.ModelSerializer):
+    fecha = serializers.DateField(format="%Y-%m-%d", input_formats=["%Y-%m-%d"])
     class Meta:
         model = Viaje
         fields = '__all__'
@@ -101,3 +107,13 @@ class EncomiendaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Encomienda
         fields = '__all__'
+        extra_kwargs = {
+            'flete': {'required': True},
+            'origen': {'required': True},
+            'destino': {'required': True},
+            'viaje': {'required': True},
+            'cliente': {'required': True},
+            'remitente': {'required': True},
+            'ruc_ci': {'required': True},
+            'tipo_envio': {'required': True}
+        }

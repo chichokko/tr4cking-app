@@ -1,7 +1,7 @@
 import { Link, NavLink } from "react-router-dom";
 import { Users, Bus, Route, ReceiptText, 
   HandHelping, LogOut, Building, Clock, MapPin, 
-  Stamp, UserCircle, MapPinPlus, Armchair, PlaneTakeoff,
+  Stamp, UserCircle, PlaneTakeoff,
    ContactRound } from "lucide-react";
 import MobileNavbar from "./MobileNavbar";
 
@@ -21,10 +21,8 @@ const AdminSidebar = () => {
       items: [
         { title: "Buses", path: "/admin/buses", icon: <Bus className="size-5 opacity-75" /> },
         { title: "Rutas", path: "/admin/rutas", icon: <Route className="size-5 opacity-75" /> },
-        { title: "Paradas de Ruta", path: "/admin/paradas-ruta", icon: <MapPinPlus className="size-5 opacity-75" /> },
-        { title: "Asientos", path: "/admin/asientos", icon: <Armchair className="size-5 opacity-75" /> },
-        { title: "Viajes", path: "/admin/viajes", icon: <PlaneTakeoff className="size-5 opacity-75" /> },
-        { title: "Horarios", path: "/admin/horarios", icon: <Clock className="size-5 opacity-75" /> }
+        { title: "Horarios", path: "/admin/horarios", icon: <Clock className="size-5 opacity-75" /> },
+        { title: "Viajes", path: "/admin/viajes", icon: <PlaneTakeoff className="size-5 opacity-75" /> }
       ]
     },
     {
@@ -32,14 +30,13 @@ const AdminSidebar = () => {
       items: [
         { title: "Pasajes", path: "/admin/pasajes", icon: <HandHelping className="size-5 opacity-75" /> },
         { title: "Ventas", path: "/admin/facturacion", icon: <ReceiptText className="size-5 opacity-75" /> },
-        { title: "Timbrados", path: "/admin/timbrados", icon: <Stamp className="size-5 opacity-75" /> }
+        { title: "Encomiendas", path: "/admin/encomiendas", icon: <Stamp className="size-5 opacity-75" /> }
       ]
     },
     {
       name: "Gestión Territorial",
       items: [
         { title: "Empresas", path: "/admin/empresas", icon: <Building className="size-5 opacity-75" /> },
-        { title: "Agencias", path: "/admin/agencias", icon: <Building className="size-5 opacity-75" /> },
         { title: "Localidades", path: "/admin/localidades", icon: <MapPin className="size-5 opacity-75" /> }
       ]
     }
