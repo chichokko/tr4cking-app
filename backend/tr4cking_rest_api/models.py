@@ -195,14 +195,35 @@ class Viaje(models.Model):
     class Meta:
         unique_together = ('bus', 'fecha', 'horario')
 
+
 # -----------------------------------------------
-# Servicios (Pasajes y Encomiendas)
+# Servicios (Pasajes y Reservas)
 # -----------------------------------------------
 class Pasaje(models.Model):
     id_pasaje = models.BigAutoField(primary_key=True)
-    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
     viaje = models.ForeignKey(Viaje, on_delete=models.CASCADE)
     asiento = models.ForeignKey(Asiento, on_delete=models.CASCADE)
+    pasajero = models.ForeignKey(Pasajero, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"Pasaje #{self.id_pasaje} - {self.pasajero}"
+
+class CabeceraReserva(models.Model):
+    id_reserva = models.BigAutoField(primary_key=True)
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
+    fecha_reserva = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Reserva #{self.id_reserva} - {self.cliente}"
+
+class DetalleReserva(models.Model):
+    id_detalle = models.BigAutoField(primary_key=True)
+    reserva = models.ForeignKey(CabeceraReserva, on_delete=models.CASCADE)
+    pasaje = models.OneToOneField(Pasaje, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"Detalle #{self.id_detalle} - Reserva #{self.reserva.id_reserva}"
+
 
 class Encomienda(models.Model):
     TIPO_ENVIO_CHOICES = [

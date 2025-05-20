@@ -5,7 +5,8 @@ from django.contrib.auth.models import Group, Permission
 from .models import (
     Persona, UsuarioPersona, Cliente, Pasajero, Empresa,
     Localidad, Parada, Bus, Asiento, Ruta, DetalleRuta,
-    Horario, Viaje, Pasaje, Encomienda
+    Horario, Viaje, Pasaje, CabeceraReserva, DetalleReserva,
+    Encomienda
 )
 
 User = get_user_model()
@@ -120,14 +121,31 @@ class ViajeSerializer(serializers.ModelSerializer):
                  'fecha', 'activo', 'observaciones']
 
 class PasajeSerializer(serializers.ModelSerializer):
-    cliente_details = ClienteSerializer(source='cliente', read_only=True)
     viaje_details = ViajeSerializer(source='viaje', read_only=True)
     asiento_details = AsientoSerializer(source='asiento', read_only=True)
+    pasajero_details = PasajeroSerializer(source='pasajero', read_only=True)
 
     class Meta:
         model = Pasaje
-        fields = ['id_pasaje', 'cliente', 'cliente_details', 'viaje', 
-                 'viaje_details', 'asiento', 'asiento_details']
+        fields = ['id_pasaje', 'viaje', 'viaje_details', 'asiento', 
+                 'asiento_details', 'pasajero', 'pasajero_details']
+
+class CabeceraReservaSerializer(serializers.ModelSerializer):
+    cliente_details = ClienteSerializer(source='cliente', read_only=True)
+
+    class Meta:
+        model = CabeceraReserva
+        fields = ['id_reserva', 'cliente', 'cliente_details', 'fecha_reserva']
+        read_only_fields = ('fecha_reserva',)
+
+class DetalleReservaSerializer(serializers.ModelSerializer):
+    reserva_details = CabeceraReservaSerializer(source='reserva', read_only=True)
+    pasaje_details = PasajeSerializer(source='pasaje', read_only=True)
+
+    class Meta:
+        model = DetalleReserva
+        fields = ['id_detalle', 'reserva', 'reserva_details', 
+                 'pasaje', 'pasaje_details']
 
 class EncomiendaSerializer(serializers.ModelSerializer):
     cliente_details = ClienteSerializer(source='cliente', read_only=True)

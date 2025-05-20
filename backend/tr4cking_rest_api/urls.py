@@ -6,7 +6,8 @@ from .views import (
     PersonaViewSet, UsuarioPersonaViewSet, ClienteViewSet, PasajeroViewSet,
     EmpresaViewSet, LocalidadViewSet, ParadaViewSet, BusViewSet,
     AsientoViewSet, RutaViewSet, DetalleRutaViewSet, HorarioViewSet,
-    ViajeViewSet, PasajeViewSet, EncomiendaViewSet
+    ViajeViewSet, PasajeViewSet, CabeceraReservaViewSet, DetalleReservaViewSet, 
+    EncomiendaViewSet
 )
 
 
@@ -44,6 +45,8 @@ router.register(r'horarios', HorarioViewSet)
 # Viajes y Servicios
 router.register(r'viajes', ViajeViewSet)
 router.register(r'pasajes', PasajeViewSet)
+router.register(r'reservas', CabeceraReservaViewSet)
+router.register(r'detalle-reservas', DetalleReservaViewSet)
 router.register(r'encomiendas', EncomiendaViewSet)
 
 urlpatterns = [

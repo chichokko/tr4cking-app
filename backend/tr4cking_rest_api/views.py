@@ -6,7 +6,8 @@ from django.contrib.auth.models import Group, Permission
 from .models import (
     Persona, UsuarioPersona, Cliente, Pasajero, Empresa,
     Localidad, Parada, Bus, Asiento, Ruta, DetalleRuta,
-    Horario, Viaje, Pasaje, Encomienda
+    Horario, Viaje, Pasaje, CabeceraReserva, DetalleReserva, 
+    Encomienda
 )
 from .serializers import (
     UserSerializer, GroupSerializer, PermissionSerializer,
@@ -14,7 +15,8 @@ from .serializers import (
     PasajeroSerializer, EmpresaSerializer, LocalidadSerializer,
     ParadaSerializer, BusSerializer, AsientoSerializer, RutaSerializer,
     DetalleRutaSerializer, HorarioSerializer, ViajeSerializer,
-    PasajeSerializer, EncomiendaSerializer
+    PasajeSerializer, CabeceraReservaSerializer, DetalleReservaSerializer, 
+    EncomiendaSerializer
 )
 
 User = get_user_model()
@@ -164,10 +166,45 @@ class ViajeViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(activo=activo)
         return queryset
 
+
 class PasajeViewSet(viewsets.ModelViewSet):
-    queryset = Pasaje.objects.select_related('cliente', 'viaje', 'asiento')
+    queryset = Pasaje.objects.select_related('viaje', 'asiento', 'pasajero')
     serializer_class = PasajeSerializer
     permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        viaje = self.request.query_params.get('viaje', None)
+        pasajero = self.request.query_params.get('pasajero', None)
+        if viaje:
+            queryset = queryset.filter(viaje_id=viaje)
+        if pasajero:
+            queryset = queryset.filter(pasajero_id=pasajero)
+        return queryset
+
+class CabeceraReservaViewSet(viewsets.ModelViewSet):
+    queryset = CabeceraReserva.objects.select_related('cliente')
+    serializer_class = CabeceraReservaSerializer
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        cliente = self.request.query_params.get('cliente', None)
+        if cliente:
+            queryset = queryset.filter(cliente_id=cliente)
+        return queryset
+
+class DetalleReservaViewSet(viewsets.ModelViewSet):
+    queryset = DetalleReserva.objects.select_related('reserva', 'pasaje')
+    serializer_class = DetalleReservaSerializer
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        reserva = self.request.query_params.get('reserva', None)
+        if reserva:
+            queryset = queryset.filter(reserva_id=reserva)
+        return queryset
 
 class EncomiendaViewSet(viewsets.ModelViewSet):
     queryset = Encomienda.objects.select_related(
