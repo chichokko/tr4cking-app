@@ -1,7 +1,7 @@
 import React, { ChangeEvent, FormEvent } from 'react';
 
 interface Cliente {
-  id: number;
+  id_cliente: number;
   razon_social: string;
 }
 
@@ -81,7 +81,7 @@ const EncomiendaForm: React.FC<EncomiendaFormProps> = ({
         >
           <option value="">Seleccionar Cliente</option>
           {clientes.map(c => (
-            <option key={c.id} value={c.id}>{c.razon_social}</option>
+            <option key={c.id_cliente} value={c.id_cliente}>{c.razon_social}</option>
           ))}
         </select>
       </div>

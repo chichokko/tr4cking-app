@@ -9,37 +9,70 @@ from django.db import models
 # -> Ya lo maneja Django internamente, no hay que redefinirlo
 
 # -----------------------------------------------
-# Clientes (clientes no registrados)
+# Personas y Usuarios
+# -----------------------------------------------
+class Persona(models.Model):
+    cedula = models.BigIntegerField(primary_key=True, unique=True)
+    nombre = models.CharField(max_length=50)
+    apellido = models.CharField(max_length=50)
+    telefono = models.CharField(max_length=30)
+    direccion = models.TextField(help_text="Requerido para facturación")
+
+    def __str__(self):
+        return f"{self.nombre} {self.apellido}"
+
+class UsuarioPersona(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, primary_key=True, on_delete=models.CASCADE)
+    cedula = models.OneToOneField(
+        Persona,
+        to_field='cedula',
+        db_column='cedula',
+        on_delete=models.CASCADE
+    )
+
+    class Meta:
+        db_table = 'usuario_persona'
+
+# -----------------------------------------------
+# Clientes (actualizado)
 # -----------------------------------------------
 class Cliente(models.Model):
-    #id_cliente = models.BigAutoField(primary_key=True)
-    usuario = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
+    id_cliente = models.BigAutoField(primary_key=True)
+    cedula = models.ForeignKey(
+        Persona,
+        to_field='cedula',
         null=True,
         blank=True,
-        related_name='cliente'
+        on_delete=models.SET_NULL
     )
-    ruc = models.CharField(max_length=15, unique=True)
-    dv = models.CharField(max_length=2, blank=True, null=True)
-    razon_social = models.CharField(max_length=100)
-    telefono = models.CharField(max_length=30)
-    direccion = models.TextField()
+    dv = models.CharField(
+        max_length=2,
+        blank=True,
+        null=True,
+        help_text="Dígito verificador (opcional)"
+    )
+    razon_social = models.CharField(
+        max_length=100,
+        help_text="Para facturación, prioridad: auth_user > cliente o empleado para casuales"
+    )
     fecha_registro = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.razon_social
 
 # -----------------------------------------------
-# Geografía
+# Pasajeros (nuevo)
 # -----------------------------------------------
-class Localidad(models.Model):
-    id_localidad = models.BigAutoField(primary_key=True)
-    nombre = models.CharField(max_length=100)
-    coordenadas = models.FloatField(blank=True, null=True)
+class Pasajero(models.Model):
+    id_pasajero = models.BigAutoField(primary_key=True)
+    cedula = models.OneToOneField(
+        Persona,
+        to_field='cedula',
+        on_delete=models.CASCADE
+    )
 
     def __str__(self):
-        return self.nombre
+        return f"{self.cedula.nombre} {self.cedula.apellido}"
 
 # -----------------------------------------------
 # Empresas y Sucursales
@@ -55,43 +88,31 @@ class Empresa(models.Model):
     def __str__(self):
         return self.nombre
 
-class Sucursal(models.Model):
-    id_sucursal = models.BigAutoField(primary_key=True)
-    localidad = models.ForeignKey(Localidad, on_delete=models.CASCADE)
-
 # -----------------------------------------------
-# Paradas
+# Geografía
 # -----------------------------------------------
-class Parada(models.Model):
-    TIPOS_PARADA = [
-        ('A', 'Agencia'),
-        ('P', 'Parada de Bus'),
-        ('T', 'Terminal'),
-    ]
-
-    id_parada = models.BigAutoField(primary_key=True)
-    empresa = models.ForeignKey(Empresa, on_delete=models.CASCADE)
-    tipo_parada = models.CharField(max_length=1, choices=TIPOS_PARADA)
-    nombre = models.TextField(unique=True)
-    direccion = models.TextField(blank=True, null=True)
-    telefono = models.TextField(blank=True, null=True)
-    localidad = models.OneToOneField(Localidad, on_delete=models.CASCADE)
+class Localidad(models.Model):
+    id_localidad = models.BigAutoField(primary_key=True)
+    nombre = models.CharField(max_length=100)
+    coordenadas = models.FloatField(blank=True, null=True)
 
     def __str__(self):
         return self.nombre
 
-# -----------------------------------------------
-# Empleados
-# -----------------------------------------------
-class Empleado(models.Model):
-    id_empleado = models.BigAutoField(primary_key=True)
-    usuario = models.OneToOneField('auth.User', on_delete=models.CASCADE)
-    empresa = models.ForeignKey(Empresa, on_delete=models.CASCADE)
-    fecha_contratacion = models.DateField()
-    cargo = models.CharField(max_length=100)
+class Parada(models.Model):
+    id_parada = models.BigAutoField(primary_key=True)
+    localidad = models.ForeignKey(Localidad, on_delete=models.CASCADE)
+    nombre = models.CharField(max_length=100)
+    direccion = models.TextField()
+    coordenadas = models.FloatField(blank=True, null=True)
+    activo = models.BooleanField(default=True)
 
     def __str__(self):
-        return f"{self.usuario.first_name} {self.usuario.last_name}"
+        return f"{self.nombre} ({self.localidad.nombre})"
+
+    class Meta:
+        verbose_name = "Parada"
+        verbose_name_plural = "Paradas"
 
 # -----------------------------------------------
 # Transporte (Buses y Asientos)
@@ -208,6 +229,6 @@ class Encomienda(models.Model):
 
     def __str__(self):
         return f"Encomienda #{self.id_encomienda} - {self.get_tipo_envio_display()}"
-    
+
 
 

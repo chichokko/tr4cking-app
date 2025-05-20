@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import "./index.css";
 import AdminLayout from "./layouts/AdminLayout";
 import AdminDashboard from "./pages/admin/Dashboard";
+import Personas from "./pages/admin/Personas/Personas";
 import Usuarios from "./pages/admin/Usuarios";
 // import PrivateRoute from "./components/PrivateRoute";
 import Login from "./auth/Login";
@@ -27,6 +28,7 @@ function App() {
 
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<AdminDashboard />} />
+          <Route path="personas" element={<Personas />} />
           <Route path="usuarios" element={<Usuarios />} />
           <Route path="clientes" element={<Clientes />} />
           <Route path="empleados" element={<Empleados />} />

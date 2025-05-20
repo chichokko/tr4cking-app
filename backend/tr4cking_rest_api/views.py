@@ -1,31 +1,26 @@
 # views.py
 from rest_framework import viewsets, status
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.response import Response
-from django.contrib.auth.models import User, Group, Permission
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.contrib.auth import get_user_model
-
+from django.contrib.auth.models import Group, Permission
 from .models import (
-    Cliente, Localidad, Empresa, Sucursal, Parada, Empleado,
-    Bus, Ruta, DetalleRuta, Horario, Viaje, Asiento,
-    Pasaje, Encomienda
+    Persona, UsuarioPersona, Cliente, Pasajero, Empresa,
+    Localidad, Parada, Bus, Asiento, Ruta, DetalleRuta,
+    Horario, Viaje, Pasaje, Encomienda
 )
 from .serializers import (
     UserSerializer, GroupSerializer, PermissionSerializer,
-    ClienteSerializer, LocalidadSerializer, EmpresaSerializer, SucursalSerializer,
-    ParadaSerializer, EmpleadoSerializer, BusSerializer, RutaSerializer,
+    PersonaSerializer, UsuarioPersonaSerializer, ClienteSerializer, 
+    PasajeroSerializer, EmpresaSerializer, LocalidadSerializer,
+    ParadaSerializer, BusSerializer, AsientoSerializer, RutaSerializer,
     DetalleRutaSerializer, HorarioSerializer, ViajeSerializer,
-    AsientoSerializer, PasajeSerializer, EncomiendaSerializer
+    PasajeSerializer, EncomiendaSerializer
 )
 
 User = get_user_model()
 
+# Authentication ViewSets
 class UserViewSet(viewsets.ModelViewSet):
-    class Meta:
-        model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'is_active', 'is_staff', 'groups', 'user_permissions']
-    
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [AllowAny]
@@ -40,69 +35,144 @@ class PermissionViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = PermissionSerializer
     permission_classes = [AllowAny]
 
-class ClienteViewSet(viewsets.ModelViewSet):
-    queryset = Cliente.objects.select_related('usuario').all()
-    serializer_class = ClienteSerializer
+# Personas y Usuarios ViewSets
+class PersonaViewSet(viewsets.ModelViewSet):
+    queryset = Persona.objects.all()
+    serializer_class = PersonaSerializer
+    permission_classes = [AllowAny]
 
     def get_queryset(self):
-        return Cliente.objects.select_related('usuario').all()
+        queryset = Persona.objects.all()
+        cedula = self.request.query_params.get('cedula', None)
+        if cedula:
+            queryset = queryset.filter(cedula=cedula)
+        return queryset
 
-class LocalidadViewSet(viewsets.ModelViewSet):
-    queryset = Localidad.objects.all()
-    serializer_class = LocalidadSerializer
+class UsuarioPersonaViewSet(viewsets.ModelViewSet):
+    queryset = UsuarioPersona.objects.select_related('user', 'cedula')
+    serializer_class = UsuarioPersonaSerializer
+    permission_classes = [AllowAny]
 
+# Clientes y Pasajeros ViewSets
+class ClienteViewSet(viewsets.ModelViewSet):
+    queryset = Cliente.objects.select_related('cedula')
+    serializer_class = ClienteSerializer
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        queryset = Cliente.objects.select_related('cedula')
+        cedula = self.request.query_params.get('cedula', None)
+        if cedula:
+            queryset = queryset.filter(cedula__cedula=cedula)
+        return queryset
+
+class PasajeroViewSet(viewsets.ModelViewSet):
+    queryset = Pasajero.objects.select_related('cedula')
+    serializer_class = PasajeroSerializer
+    permission_classes = [AllowAny]
+
+# Empresas ViewSet
 class EmpresaViewSet(viewsets.ModelViewSet):
     queryset = Empresa.objects.all()
     serializer_class = EmpresaSerializer
+    permission_classes = [AllowAny]
 
-class SucursalViewSet(viewsets.ModelViewSet):
-    queryset = Sucursal.objects.all()
-    serializer_class = SucursalSerializer
+# Geografia ViewSets
+class LocalidadViewSet(viewsets.ModelViewSet):
+    queryset = Localidad.objects.all()
+    serializer_class = LocalidadSerializer
+    permission_classes = [AllowAny]
 
 class ParadaViewSet(viewsets.ModelViewSet):
-    queryset = Parada.objects.all()
+    queryset = Parada.objects.select_related('localidad')
     serializer_class = ParadaSerializer
+    permission_classes = [AllowAny]
 
-class EmpleadoViewSet(viewsets.ModelViewSet):
-    queryset = Empleado.objects.all()
-    serializer_class = EmpleadoSerializer
+    def get_queryset(self):
+        queryset = Parada.objects.select_related('localidad')
+        localidad = self.request.query_params.get('localidad', None)
+        activo = self.request.query_params.get('activo', None)
+        if localidad:
+            queryset = queryset.filter(localidad_id=localidad)
+        if activo is not None:
+            queryset = queryset.filter(activo=activo)
+        return queryset
 
+# Transporte ViewSets
 class BusViewSet(viewsets.ModelViewSet):
-    queryset = Bus.objects.all()
+    queryset = Bus.objects.select_related('empresa')
     serializer_class = BusSerializer
+    permission_classes = [AllowAny]
 
-class RutaViewSet(viewsets.ModelViewSet):
-    queryset = Ruta.objects.all()
-    serializer_class = RutaSerializer
-
-class DetalleRutaViewSet(viewsets.ModelViewSet):
-    queryset = DetalleRuta.objects.all()
-    serializer_class = DetalleRutaSerializer
-
-class HorarioViewSet(viewsets.ModelViewSet):
-    queryset = Horario.objects.all()
-    serializer_class = HorarioSerializer
-
-class ViajeViewSet(viewsets.ModelViewSet):
-    queryset = Viaje.objects.all()
-    serializer_class = ViajeSerializer
+    def get_queryset(self):
+        queryset = Bus.objects.select_related('empresa')
+        empresa = self.request.query_params.get('empresa', None)
+        estado = self.request.query_params.get('estado', None)
+        if empresa:
+            queryset = queryset.filter(empresa_id=empresa)
+        if estado:
+            queryset = queryset.filter(estado=estado)
+        return queryset
 
 class AsientoViewSet(viewsets.ModelViewSet):
-    queryset = Asiento.objects.all()
+    queryset = Asiento.objects.select_related('bus')
     serializer_class = AsientoSerializer
-    
+    permission_classes = [AllowAny]
+
     def get_queryset(self):
-        queryset = super().get_queryset()
-        bus_id = self.request.query_params.get('bus', None)
-        if bus_id is not None:
-            queryset = queryset.filter(bus_id=bus_id)
+        queryset = Asiento.objects.select_related('bus')
+        bus = self.request.query_params.get('bus', None)
+        estado = self.request.query_params.get('estado', None)
+        if bus:
+            queryset = queryset.filter(bus_id=bus)
+        if estado:
+            queryset = queryset.filter(estado=estado)
+        return queryset
+
+# Rutas ViewSets
+class RutaViewSet(viewsets.ModelViewSet):
+    queryset = Ruta.objects.prefetch_related('detalleruta_set')
+    serializer_class = RutaSerializer
+    permission_classes = [AllowAny]
+
+class DetalleRutaViewSet(viewsets.ModelViewSet):
+    queryset = DetalleRuta.objects.select_related('ruta', 'parada')
+    serializer_class = DetalleRutaSerializer
+    permission_classes = [AllowAny]
+
+class HorarioViewSet(viewsets.ModelViewSet):
+    queryset = Horario.objects.select_related('ruta')
+    serializer_class = HorarioSerializer
+    permission_classes = [AllowAny]
+
+# Viajes y Servicios ViewSets
+class ViajeViewSet(viewsets.ModelViewSet):
+    queryset = Viaje.objects.select_related('horario', 'bus')
+    serializer_class = ViajeSerializer
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        queryset = Viaje.objects.select_related('horario', 'bus')
+        fecha = self.request.query_params.get('fecha', None)
+        bus = self.request.query_params.get('bus', None)
+        activo = self.request.query_params.get('activo', None)
+        if fecha:
+            queryset = queryset.filter(fecha=fecha)
+        if bus:
+            queryset = queryset.filter(bus_id=bus)
+        if activo is not None:
+            queryset = queryset.filter(activo=activo)
         return queryset
 
 class PasajeViewSet(viewsets.ModelViewSet):
-    queryset = Pasaje.objects.all()
+    queryset = Pasaje.objects.select_related('cliente', 'viaje', 'asiento')
     serializer_class = PasajeSerializer
+    permission_classes = [AllowAny]
 
 class EncomiendaViewSet(viewsets.ModelViewSet):
-    queryset = Encomienda.objects.all()
+    queryset = Encomienda.objects.select_related(
+        'viaje', 'cliente', 'origen', 'destino'
+    )
     serializer_class = EncomiendaSerializer
+    permission_classes = [AllowAny]
 

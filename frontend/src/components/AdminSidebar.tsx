@@ -11,6 +11,7 @@ const AdminSidebar = () => {
     {
       name: "Gestión de Usuarios y Accesos",
       items: [
+        { title: "Personas", path: "/admin/personas", icon: <Users className="size-5 opacity-75" /> },
         { title: "Usuarios", path: "/admin/usuarios", icon: <Users className="size-5 opacity-75" /> },
         { title: "Empleados", path: "/admin/empleados", icon: <ContactRound className="size-5 opacity-75" /> },
         { title: "Clientes", path: "/admin/clientes", icon: <UserCircle className="size-5 opacity-75" /> },
