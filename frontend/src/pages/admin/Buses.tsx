@@ -63,7 +63,7 @@ const Buses = () => {
   const fetchBuses = async () => {
     try {
       const response = await axios.get(BUSES_API_URL);
-      setBuses(response.data);
+      setBuses(response.data as Bus[]);
     } catch (error) {
       console.error("Error al obtener buses:", error);
     }
@@ -72,7 +72,7 @@ const Buses = () => {
   const fetchEmpresas = async () => {
     try {
       const response = await axios.get(EMPRESAS_API_URL);
-      setEmpresas(response.data);
+      setEmpresas(response.data as Empresa[]);
     } catch (error) {
       console.error("Error al obtener empresas:", error);
     }
@@ -81,7 +81,7 @@ const Buses = () => {
   const fetchAsientos = async (busId: number) => {
     try {
       const response = await axios.get(`${ASIENTOS_API_URL}?bus=${busId}`);
-      setAsientos(response.data);
+      setAsientos(response.data as Asiento[]);
     } catch (error) {
       console.error("Error al obtener asientos:", error);
     }
@@ -97,7 +97,7 @@ const Buses = () => {
 
       // Obtener asientos existentes para el bus
       const response = await axios.get(`${ASIENTOS_API_URL}?bus=${busId}`);
-      const asientosExistentes = response.data;
+      const asientosExistentes = response.data as Asiento[];
       
       // Encontrar el número más alto de asiento existente
       const ultimoNumero = asientosExistentes.length > 0 
@@ -314,6 +314,9 @@ const Buses = () => {
               <tr className="bg-gray-200 dark:bg-gray-700">
                 <th className="p-2">Placa</th>
                 <th className="p-2">Empresa</th>
+                <th className="p-2">Marca</th>
+                <th className="p-2">Modelo</th>
+                <th className="p-2">Capacidad</th>
                 <th className="p-2">Estado</th>
                 <th className="p-2">Acciones</th>
               </tr>
@@ -325,7 +328,18 @@ const Buses = () => {
                   <td className="p-2">
                     {empresas.find(e => e.id_empresa === bus.empresa)?.nombre}
                   </td>
-                  <td className="p-2">{bus.estado}</td>
+                  <td className="p-2">{bus.marca}</td>
+                  <td className="p-2">{bus.modelo}</td>
+                  <td className="p-2">{bus.capacidad}</td>
+                  <td className="p-2">
+                    <span className={`px-2 py-1 rounded-full text-sm ${
+                      bus.estado 
+                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
+                        : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                    }`}>
+                      {bus.estado ? 'Activo' : 'Inactivo'}
+                    </span>
+                  </td>
                   <td className="p-2 flex space-x-2">
                     <button
                       onClick={() => handleOpenAsientos(bus.id_bus)}

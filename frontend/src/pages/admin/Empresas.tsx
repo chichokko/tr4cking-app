@@ -31,7 +31,7 @@ const Empresas = () => {
 
   const fetchEmpresas = async () => {
     try {
-      const response = await axios.get(EMPRESAS_API_URL);
+      const response = await axios.get<Empresa[]>(EMPRESAS_API_URL);
       setEmpresas(response.data);
     } catch (error) {
       console.error("Error al obtener empresas:", error);

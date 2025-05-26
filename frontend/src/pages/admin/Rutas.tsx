@@ -3,7 +3,7 @@ import axios from "axios";
 import { Edit, Trash, MapPin, ArrowUp, ArrowDown, X } from "lucide-react";
 
 interface Localidad {
-  id: number;
+  id_localidad: number;
   nombre: string;
 }
 
@@ -24,10 +24,9 @@ interface Ruta {
   detalles: DetalleRuta[];
 }
 
-
 const RUTAS_API_URL = "http://127.0.0.1:8000/api/rutas/";
 const LOCALIDADES_API_URL = "http://127.0.0.1:8000/api/localidades/";
-const DETALLES_API_URL = "http://127.0.0.1:8000/api/detalles-ruta/";
+const DETALLES_API_URL = "http://127.0.0.1:8000/api/detalle-rutas/";
 
 const Rutas = () => {
   const [rutas, setRutas] = useState<Ruta[]>([]);
@@ -38,10 +37,14 @@ const Rutas = () => {
     precio_base: 0,
     activo: true,
   });
+  const [origen, setOrigen] = useState<number | null>(null);
+  const [destino, setDestino] = useState<number | null>(null);
   const [rutaEditando, setRutaEditando] = useState<number | null>(null);
   const [rutaSeleccionada, setRutaSeleccionada] = useState<number | null>(null);
   const [modalDetallesVisible, setModalDetallesVisible] = useState(false);
   const [detalles, setDetalles] = useState<DetalleRuta[]>([]);
+  const [detallesTemp, setDetallesTemp] = useState<DetalleRuta[]>([]);
+  const [cambiosPendientes, setCambiosPendientes] = useState(false);
 
   useEffect(() => {
     fetchRutas();
@@ -50,7 +53,7 @@ const Rutas = () => {
 
   const fetchRutas = async () => {
     try {
-      const response = await axios.get(RUTAS_API_URL);
+      const response = await axios.get<Ruta[]>(RUTAS_API_URL);
       setRutas(response.data);
     } catch (error) {
       console.error("Error al obtener rutas:", error);
@@ -59,7 +62,7 @@ const Rutas = () => {
 
   const fetchLocalidades = async () => {
     try {
-      const response = await axios.get(LOCALIDADES_API_URL);
+      const response = await axios.get<Localidad[]>(LOCALIDADES_API_URL);
       setLocalidades(response.data);
     } catch (error) {
       console.error("Error al obtener localidades:", error);
@@ -69,11 +72,42 @@ const Rutas = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      let rutaId;
       if (rutaEditando) {
         await axios.put(`${RUTAS_API_URL}${rutaEditando}/`, formData);
+        rutaId = rutaEditando;
       } else {
-        await axios.post(RUTAS_API_URL, formData);
+        const response = await axios.post(RUTAS_API_URL, formData);
+        rutaId = (response.data as { id_ruta: number }).id_ruta;
       }
+
+      // Agregar origen y destino como detalles
+      if (origen && destino) {
+        // Si estamos editando, primero eliminamos los detalles existentes
+        if (rutaEditando) {
+          const rutaActual = rutas.find(r => r.id_ruta === rutaEditando);
+          if (rutaActual?.detalles) {
+            await Promise.all(rutaActual.detalles.map(detalle => 
+              axios.delete(`${DETALLES_API_URL}${detalle.id}/`)
+            ));
+          }
+        }
+
+        // Agregar origen
+        await axios.post(DETALLES_API_URL, {
+          ruta: rutaId,
+          parada: origen,
+          orden: 1
+        });
+
+        // Agregar destino
+        await axios.post(DETALLES_API_URL, {
+          ruta: rutaId,
+          parada: destino,
+          orden: 2
+        });
+      }
+
       fetchRutas();
       resetForm();
     } catch (error) {
@@ -88,6 +122,10 @@ const Rutas = () => {
       precio_base: ruta.precio_base,
       activo: ruta.activo,
     });
+    if (ruta.detalles && ruta.detalles.length >= 2) {
+      setOrigen(ruta.detalles[0].parada);
+      setDestino(ruta.detalles[1].parada);
+    }
     setRutaEditando(ruta.id_ruta);
   };
 
@@ -108,13 +146,17 @@ const Rutas = () => {
       precio_base: 0,
       activo: true,
     });
+    setOrigen(null);
+    setDestino(null);
     setRutaEditando(null);
   };
 
   const handleGestionarDetalles = (ruta: Ruta) => {
     setRutaSeleccionada(ruta.id_ruta);
     setDetalles(ruta.detalles || []);
+    setDetallesTemp(ruta.detalles || []);
     setModalDetallesVisible(true);
+    setCambiosPendientes(false);
   };
 
   const agregarParada = async (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -122,41 +164,39 @@ const Rutas = () => {
     if (!paradaId || !rutaSeleccionada) return;
 
     try {
-      const response = await axios.post(DETALLES_API_URL, {
+      const response = await axios.post<DetalleRuta>(DETALLES_API_URL, {
         ruta: rutaSeleccionada,
         parada: paradaId,
-        orden: detalles.length + 1
+        orden: detallesTemp.length + 1
       });
 
-      setDetalles([...detalles, response.data]);
+      setDetallesTemp([...detallesTemp, response.data]);
+      setCambiosPendientes(true);
     } catch (error) {
       console.error("Error al agregar parada:", error);
     }
   };
 
-  const moverParada = async (index: number, direccion: 'arriba' | 'abajo') => {
+  // Helper function to get origin-destination display
+  const getOrigenDestino = (detalles: DetalleRuta[]) => {
+    if (!detalles || detalles.length < 2) return "No definido";
+    return `${detalles[0].nombre_parada} - ${detalles[1].nombre_parada}`;
+  };
+
+  const moverParada = (index: number, direccion: 'arriba' | 'abajo') => {
     if (
       (direccion === 'arriba' && index === 0) ||
-      (direccion === 'abajo' && index === detalles.length - 1)
+      (direccion === 'abajo' && index === detallesTemp.length - 1)
     ) return;
 
-    const newDetalles = [...detalles];
+    const newDetalles = [...detallesTemp];
     const newIndex = direccion === 'arriba' ? index - 1 : index + 1;
     
     // Intercambiar elementos
     [newDetalles[index], newDetalles[newIndex]] = [newDetalles[newIndex], newDetalles[index]];
     
-    // Actualizar órdenes
-    try {
-      await Promise.all([
-        axios.patch(`${DETALLES_API_URL}${newDetalles[index].id}/`, { orden: index + 1 }),
-        axios.patch(`${DETALLES_API_URL}${newDetalles[newIndex].id}/`, { orden: newIndex + 1 })
-      ]);
-      
-      setDetalles(newDetalles);
-    } catch (error) {
-      console.error("Error al reordenar paradas:", error);
-    }
+    setDetallesTemp(newDetalles);
+    setCambiosPendientes(true);
   };
 
   const eliminarParada = async (id: number) => {
@@ -165,6 +205,25 @@ const Rutas = () => {
       setDetalles(detalles.filter(d => d.id !== id));
     } catch (error) {
       console.error("Error al eliminar parada:", error);
+    }
+  };
+
+  const guardarCambiosDetalles = async () => {
+    try {
+      // Actualizar todos los órdenes en una sola operación
+      await Promise.all(
+        detallesTemp.map((detalle, index) =>
+          axios.patch(`${DETALLES_API_URL}${detalle.id}/`, {
+            orden: index + 1
+          })
+        )
+      );
+      
+      setDetalles(detallesTemp);
+      setCambiosPendientes(false);
+      fetchRutas(); // Actualizar la lista de rutas
+    } catch (error) {
+      console.error("Error al actualizar el orden de las paradas:", error);
     }
   };
 
@@ -177,6 +236,44 @@ const Rutas = () => {
       {/* Formulario de Ruta */}
       <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 p-4 rounded shadow-md space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Origen
+              <select
+                className="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 mt-1"
+                value={origen || ""}
+                onChange={(e) => setOrigen(Number(e.target.value))}
+                required
+              >
+                <option value="">Seleccionar origen</option>
+                {localidades.map((localidad) => (
+                  <option key={localidad.id_localidad} value={localidad.id_localidad}>
+                    {localidad.nombre}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Destino
+              <select
+                className="w-full border p-2 rounded dark:bg-gray-700 dark:border-gray-600 mt-1"
+                value={destino || ""}
+                onChange={(e) => setDestino(Number(e.target.value))}
+                required
+              >
+                <option value="">Seleccionar destino</option>
+                {localidades.map((localidad) => (
+                  <option key={localidad.id_localidad} value={localidad.id_localidad}>
+                    {localidad.nombre}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+
           <div>
             <label className="block text-sm font-medium mb-1">
               Duración Total
@@ -264,9 +361,10 @@ const Rutas = () => {
       </form>
 
       {/* Tabla de Rutas */}
-      <table className="table w-full border-collapse bg-white dark:bg-gray-800 shadow-md">
+      <table className="table w-full border-collapse bg-white dark:bg-gray-800 shadow-md mt-4">
         <thead>
           <tr className="bg-gray-200 dark:bg-gray-700">
+            <th className="p-2">Ruta</th>
             <th className="p-2">Duración Total (h)</th>
             <th className="p-2">Distancia (km)</th>
             <th className="p-2">Precio Base</th>
@@ -278,6 +376,7 @@ const Rutas = () => {
         <tbody>
           {rutas.map((ruta) => (
             <tr key={ruta.id_ruta} className="border-t dark:border-gray-600">
+              <td className="p-2">{getOrigenDestino(ruta.detalles)}</td>
               <td className="p-2">{ruta.duracion_total}</td>
               <td className="p-2">{ruta.distancia_km}</td>
               <td className="p-2">{ruta.precio_base}</td>
@@ -318,7 +417,7 @@ const Rutas = () => {
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl">
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-bold">Paradas de la Ruta</h3>
+                <h3 className="text-lg font-bold">Gestión de Paradas</h3>
                 <button
                   onClick={() => setModalDetallesVisible(false)}
                   className="text-gray-500 hover:text-gray-700"
@@ -328,38 +427,48 @@ const Rutas = () => {
               </div>
 
               <div className="space-y-4">
-                {/* Lista de paradas con estilo de playlist */}
+                {/* Lista de paradas */}
                 <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
                   <div className="space-y-2">
-                    {detalles.map((detalle, index) => (
+                    {detallesTemp.map((detalle, index) => (
                       <div 
                         key={detalle.id} 
-                        className="flex items-center justify-between bg-white dark:bg-gray-600 p-3 rounded-lg shadow-sm hover:shadow-md transition-shadow"
+                        className="flex items-center justify-between bg-white dark:bg-gray-600 p-3 rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer group"
                       >
                         <div className="flex items-center space-x-3">
-                          <span className="text-gray-500 w-6">{index + 1}.</span>
-                          <span>{detalle.nombre_parada}</span>
+                          <span className="text-gray-500 w-6">{index + 1}</span>
+                          <span className="font-medium">{detalle.nombre_parada}</span>
+                          {index === 0 && (
+                            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">
+                              Origen
+                            </span>
+                          )}
+                          {index === detallesTemp.length - 1 && (
+                            <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">
+                              Destino
+                            </span>
+                          )}
                         </div>
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button
                             onClick={() => moverParada(index, 'arriba')}
                             disabled={index === 0}
-                            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-500 rounded disabled:opacity-50"
+                            className="p-1.5 text-gray-600 hover:bg-gray-100 rounded disabled:opacity-50"
                             title="Mover arriba"
                           >
                             <ArrowUp size={16} />
                           </button>
                           <button
                             onClick={() => moverParada(index, 'abajo')}
-                            disabled={index === detalles.length - 1}
-                            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-500 rounded disabled:opacity-50"
+                            disabled={index === detallesTemp.length - 1}
+                            className="p-1.5 text-gray-600 hover:bg-gray-100 rounded disabled:opacity-50"
                             title="Mover abajo"
                           >
                             <ArrowDown size={16} />
                           </button>
                           <button
                             onClick={() => eliminarParada(detalle.id)}
-                            className="p-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-900 rounded"
+                            className="p-1.5 text-red-500 hover:bg-red-50 rounded"
                             title="Eliminar"
                           >
                             <X size={16} />
@@ -370,22 +479,45 @@ const Rutas = () => {
                   </div>
                 </div>
 
-                {/* Selector de paradas mejorado */}
+                {/* Selector de paradas */}
                 <div className="flex space-x-2">
                   <select
                     onChange={agregarParada}
                     className="flex-1 border p-2 rounded dark:bg-gray-700 dark:border-gray-600"
                     value=""
                   >
-                    <option value="">Seleccionar parada para agregar</option>
+                    <option value="">+ Agregar parada a la ruta</option>
                     {localidades
-                      .filter(loc => !detalles.some(det => det.parada === loc.id))
+                      .filter(loc => !detallesTemp.some(det => det.parada === loc.id_localidad))
                       .map((localidad) => (
-                        <option key={localidad.id} value={localidad.id}>
+                        <option key={localidad.id_localidad} value={localidad.id_localidad}>
                           {localidad.nombre}
                         </option>
                     ))}
                   </select>
+                </div>
+
+                {/* Botones de acción */}
+                <div className="flex justify-end space-x-2 pt-4">
+                  {cambiosPendientes && (
+                    <button
+                      onClick={guardarCambiosDetalles}
+                      className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                    >
+                      Guardar Cambios
+                    </button>
+                  )}
+                  <button
+                    onClick={() => {
+                      if (cambiosPendientes && !window.confirm('Hay cambios sin guardar. ¿Desea cerrar de todas formas?')) {
+                        return;
+                      }
+                      setModalDetallesVisible(false);
+                    }}
+                    className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+                  >
+                    Cerrar
+                  </button>
                 </div>
               </div>
             </div>

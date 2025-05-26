@@ -29,7 +29,8 @@ const AdminSidebar = () => {
     {
       name: "Gestión Comercial",
       items: [
-        { title: "Pasajes", path: "/admin/pasajes", icon: <HandHelping className="size-5 opacity-75" /> },
+        //{ title: "Pasajes", path: "/admin/pasajes", icon: <HandHelping className="size-5 opacity-75" /> },
+        { title: "Reservas", path: "/admin/reservas", icon: <HandHelping className="size-5 opacity-75" /> },
         { title: "Ventas", path: "/admin/facturacion", icon: <ReceiptText className="size-5 opacity-75" /> },
         { title: "Encomiendas", path: "/admin/encomiendas", icon: <Stamp className="size-5 opacity-75" /> }
       ]

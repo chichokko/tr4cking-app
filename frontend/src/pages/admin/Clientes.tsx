@@ -11,7 +11,7 @@ interface Usuario {
 }
 
 interface Cliente {
-  id: number;
+  id_cliente: number;
   usuario?: number; // Cambiado de id_usuario a usuario (el ID)
   usuario_data?: Usuario; // El objeto usuario completo que viene del backend
   ruc: string;
@@ -86,7 +86,7 @@ const Clientes = () => {
       if (clienteEditando) {
         setClientes(prevClientes => 
           prevClientes.map(cliente => 
-            cliente.id === clienteEditando ? (response.data as Cliente) : cliente
+            cliente.id_cliente === clienteEditando ? (response.data as Cliente) : cliente
           )
         );
       } else {
@@ -118,7 +118,7 @@ const Clientes = () => {
       direccion: cliente.direccion,
       usuario: cliente.usuario || null,
     });
-    setClienteEditando(cliente.id);
+    setClienteEditando(cliente.id_cliente);
   };
 
   const handleDelete = async (id: number) => {
@@ -236,7 +236,7 @@ const Clientes = () => {
           </thead>
           <tbody>
             {clientes.map((cliente) => (
-              <tr key={cliente.id} className="border-t dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700">
+              <tr key={cliente.id_cliente} className="border-t dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700">
                 <td className="p-2">{cliente.ruc}</td>
                 <td className="p-2">{cliente.dv || "-"}</td>
                 <td className="p-2">{cliente.razon_social}</td>
@@ -263,7 +263,7 @@ const Clientes = () => {
                   <button
                     className="btn btn-circle btn-text btn-sm text-red-500"
                     aria-label="Eliminar"
-                    onClick={() => handleDelete(cliente.id)}
+                    onClick={() => handleDelete(cliente.id_cliente)}
                   >
                     <Trash size={20} />
                   </button>

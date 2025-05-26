@@ -4,9 +4,9 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     UserViewSet, GroupViewSet, PermissionViewSet,
     PersonaViewSet, UsuarioPersonaViewSet, ClienteViewSet, PasajeroViewSet,
-    EmpresaViewSet, LocalidadViewSet, ParadaViewSet, BusViewSet,
-    AsientoViewSet, RutaViewSet, DetalleRutaViewSet, HorarioViewSet,
-    ViajeViewSet, PasajeViewSet, CabeceraReservaViewSet, DetalleReservaViewSet, 
+    EmpresaViewSet, EmpleadoViewSet, LocalidadViewSet, ParadaViewSet, BusViewSet,
+    AsientoViewSet, RutaViewSet, DetalleRutaViewSet,
+    ViajeViewSet, PasajeViewSet, ReservaViewSet, 
     EncomiendaViewSet
 )
 
@@ -28,7 +28,7 @@ router.register(r'pasajeros', PasajeroViewSet)
 
 # Empresas
 router.register(r'empresas', EmpresaViewSet)
-
+router.register(r'empleados', EmpleadoViewSet)
 # Geografia
 router.register(r'localidades', LocalidadViewSet)
 router.register(r'paradas', ParadaViewSet)
@@ -40,14 +40,16 @@ router.register(r'asientos', AsientoViewSet)
 # Rutas
 router.register(r'rutas', RutaViewSet)
 router.register(r'detalle-rutas', DetalleRutaViewSet)
-router.register(r'horarios', HorarioViewSet)
+#router.register(r'horarios', HorarioViewSet)
 
 # Viajes y Servicios
 router.register(r'viajes', ViajeViewSet)
 router.register(r'pasajes', PasajeViewSet)
-router.register(r'reservas', CabeceraReservaViewSet)
-router.register(r'detalle-reservas', DetalleReservaViewSet)
+router.register(r'reservas', ReservaViewSet)
+#router.register(r'detalle-reservas', DetalleReservaViewSet)
 router.register(r'encomiendas', EncomiendaViewSet)
+
+
 
 urlpatterns = [
     path('', include(router.urls)),

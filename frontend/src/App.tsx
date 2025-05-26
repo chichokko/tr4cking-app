@@ -10,8 +10,9 @@ import EmpLayout from "./layouts/EmpLayout";
 import Buses from "./pages/admin/Buses";
 import Empresas from "./pages/admin/Empresas";
 import Localidades from "./pages/admin/Localidades";
-import Rutas from "./pages/admin/Rutas";
+import Rutas from "./pages/admin/Rutas/Rutas";
 import Horarios from "./pages/admin/Horarios";
+import Reservas from "./pages/admin/Reservas/Reservas";
 import Pasajes from "./pages/admin/Pasajes";
 import Clientes from "./pages/admin/Clientes";
 import Empleados from "./pages/admin/Empleados";
@@ -36,6 +37,7 @@ function App() {
           <Route path="empresas" element={<Empresas />} />
           <Route path="localidades" element={<Localidades />} />
           <Route path="pasajes" element={<Pasajes />} />
+          <Route path="reservas" element={<Reservas />} />
           <Route path="buses" element={<Buses />} />
           <Route path="horarios" element={<Horarios />} />
           <Route path="viajes" element={<Viajes />} />
