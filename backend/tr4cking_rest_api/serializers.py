@@ -5,7 +5,9 @@ from django.contrib.auth.models import Group, Permission
 from .models import (
     Persona, UsuarioPersona, Cliente, Pasajero, Empresa,
     Empleado, Localidad, Parada, Bus, Asiento, Ruta, DetalleRuta,
-    Viaje, Pasaje, Reserva, Encomienda
+    Viaje, Pasaje, Reserva, Encomienda, TipoDocumento, Timbrado,
+    CabeceraFactura, DetalleFactura, HistorialFactura, Caja,
+    CabeceraCaja, DetalleCaja
 )
 
 User = get_user_model()
@@ -226,3 +228,43 @@ class EncomiendaSerializer(serializers.ModelSerializer):
                  'cantidad_sobre', 'cantidad_paquete', 'descripcion',
                  'fecha_creacion', 'fecha_actualizacion']
         read_only_fields = ('fecha_creacion', 'fecha_actualizacion')
+
+class TipoDocumentoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TipoDocumento
+        fields = '__all__'
+
+class TimbradoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Timbrado
+        fields = '__all__'
+
+class CabeceraFacturaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CabeceraFactura
+        fields = '__all__'
+
+class DetalleFacturaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DetalleFactura
+        fields = '__all__'
+
+class HistorialFacturaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = HistorialFactura
+        fields = '__all__'
+
+class CajaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Caja
+        fields = '__all__'
+
+class CabeceraCajaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CabeceraCaja
+        fields = '__all__'
+
+class DetalleCajaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DetalleCaja
+        fields = '__all__'

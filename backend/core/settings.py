@@ -31,6 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -42,9 +43,221 @@ INSTALLED_APPS = [
     'tr4cking_rest_api'
 ]
 
+JAZZMIN_SETTINGS = {
+    # Configuración básica
+    "site_title": "Tr4cking Admin",
+    "site_header": "Tr4cking",
+    "site_brand": "Tr4cking",
+    "site_logo": "tr4cking_rest_api/images/logo.png",
+    "welcome_sign": "Bienvenido al Panel de Administración",
+    "copyright": "Tr4cking © 2025",
+
+    # Configuración de búsqueda y usuario
+    "search_model": ["auth.User", "tr4cking_rest_api.Cliente"],
+    "user_avatar": None,
+
+    # Enlaces del menú superior
+    "topmenu_links": [
+        {"name": "Inicio", "url": "admin:index", "permissions": ["auth.view_user"]},
+        {"model": "auth.User"},
+        {"name": "Ver Sitio", "url": "http://localhost:5173", "new_window": True},
+    ],
+
+    # Configuración del sidebar
+    "show_sidebar": True,
+    "navigation_expanded": True,
+
+    # Iconos para modelos
+    "icons": {
+        # Auth
+        "auth": "fas fa-users-cog",
+        "auth.user": "fas fa-user",
+        "auth.group": "fas fa-users",
+        
+        # Personas
+        "tr4cking_rest_api.persona": "fas fa-id-card",
+        "tr4cking_rest_api.usuariopersona": "fas fa-user-circle",
+        "tr4cking_rest_api.cliente": "fas fa-user-tie",
+        "tr4cking_rest_api.pasajero": "fas fa-walking",
+        
+        # Empresas
+        "tr4cking_rest_api.empresa": "fas fa-building",
+        "tr4cking_rest_api.empleado": "fas fa-user-shield",
+        
+        # Geografía
+        "tr4cking_rest_api.localidad": "fas fa-map-marker-alt",
+        "tr4cking_rest_api.parada": "fas fa-map-pin",
+        
+        # Transporte
+        "tr4cking_rest_api.bus": "fas fa-bus",
+        "tr4cking_rest_api.asiento": "fas fa-chair",
+        "tr4cking_rest_api.ruta": "fas fa-route",
+        "tr4cking_rest_api.detalleruta": "fas fa-map-signs",
+        
+        # Viajes
+        "tr4cking_rest_api.viaje": "fas fa-road",
+        "tr4cking_rest_api.pasaje": "fas fa-ticket-alt",
+        "tr4cking_rest_api.reserva": "fas fa-calendar-check",
+        "tr4cking_rest_api.encomienda": "fas fa-box",
+        
+        # Facturación
+        "tr4cking_rest_api.tipodocumento": "fas fa-file-alt",
+        "tr4cking_rest_api.timbrado": "fas fa-stamp",
+        "tr4cking_rest_api.cabecerafactura": "fas fa-file-invoice",
+        "tr4cking_rest_api.detallefactura": "fas fa-receipt",
+        "tr4cking_rest_api.historialfactura": "fas fa-history",
+        
+        # Caja
+        "tr4cking_rest_api.caja": "fas fa-cash-register",
+        "tr4cking_rest_api.cabeceracaja": "fas fa-money-check-alt",
+        "tr4cking_rest_api.detallecaja": "fas fa-money-bill-wave",
+    },
+
+    # Organización del menú
+    "menu": [
+        {
+            "name": "Autenticación",
+            "icon": "fas fa-users-cog",
+            "models": [
+                "auth.user",
+                "auth.group"
+            ]
+        },
+        {
+            "name": "Personas",
+            "icon": "fas fa-users",
+            "models": [
+                "tr4cking_rest_api.persona",
+                "tr4cking_rest_api.usuariopersona",
+                "tr4cking_rest_api.cliente",
+                "tr4cking_rest_api.pasajero"
+            ]
+        },
+        {
+            "name": "Empresas",
+            "icon": "fas fa-building",
+            "models": [
+                "tr4cking_rest_api.empresa",
+                "tr4cking_rest_api.empleado"
+            ]
+        },
+        {
+            "name": "Geografía",
+            "icon": "fas fa-map",
+            "models": [
+                "tr4cking_rest_api.localidad",
+                "tr4cking_rest_api.parada"
+            ]
+        },
+        {
+            "name": "Transporte",
+            "icon": "fas fa-bus",
+            "models": [
+                "tr4cking_rest_api.bus",
+                "tr4cking_rest_api.asiento",
+                "tr4cking_rest_api.ruta",
+                "tr4cking_rest_api.detalleruta"
+            ]
+        },
+        {
+            "name": "Viajes y Servicios",
+            "icon": "fas fa-road",
+            "models": [
+                "tr4cking_rest_api.viaje",
+                "tr4cking_rest_api.pasaje",
+                "tr4cking_rest_api.reserva",
+                "tr4cking_rest_api.encomienda"
+            ]
+        },
+        {
+            "name": "Facturación",
+            "icon": "fas fa-file-invoice-dollar",
+            "models": [
+                "tr4cking_rest_api.tipodocumento",
+                "tr4cking_rest_api.timbrado",
+                "tr4cking_rest_api.cabecerafactura",
+                "tr4cking_rest_api.detallefactura",
+                "tr4cking_rest_api.historialfactura"
+            ]
+        },
+        {
+            "name": "Caja",
+            "icon": "fas fa-cash-register",
+            "models": [
+                "tr4cking_rest_api.caja",
+                "tr4cking_rest_api.cabeceracaja",
+                "tr4cking_rest_api.detallecaja"
+            ]
+        }
+    ],
+
+    # Configuración adicional de UI
+    "order_with_respect_to": [
+        "auth",
+        "tr4cking_rest_api.persona",
+        "tr4cking_rest_api.cliente",
+        "tr4cking_rest_api.empresa",
+    ],
+    
+    # Formato y UI
+    "changeform_format": "horizontal_tabs",
+    "changeform_format_overrides": {"auth.user": "collapsible"},
+    "custom_css": None,
+    "custom_js": None,
+    "show_ui_builder": True,
+    
+    # Tema
+    "theme": "darkly",
+    "dark_mode_theme": "darkly",
+    
+    # Clases de botones
+    "button_classes": {
+        "primary": "btn-primary",
+        "secondary": "btn-secondary",
+        "info": "btn-info",
+        "warning": "btn-warning",
+        "danger": "btn-danger",
+        "success": "btn-success"
+    }
+}
+
+# Configuración adicional de UI
+JAZZMIN_UI_TWEAKS = {
+    "navbar_small_text": False,
+    "footer_small_text": False,
+    "body_small_text": False,
+    "brand_small_text": False,
+    "brand_colour": False,
+    "accent": "accent-primary",
+    "navbar": "navbar-dark",
+    "no_navbar_border": True,
+    "navbar_fixed": True,
+    "layout_boxed": False,
+    "footer_fixed": False,
+    "sidebar_fixed": True,
+    "sidebar": "sidebar-dark-primary",
+    "sidebar_nav_small_text": True,
+    "sidebar_disable_expand": False,
+    "sidebar_nav_child_indent": True,
+    "sidebar_nav_compact_style": False,
+    "sidebar_nav_legacy_style": False,
+    "sidebar_nav_flat_style": False,
+    "theme": "darkly",
+    "dark_mode_theme": "darkly",
+    "button_classes": {
+        "primary": "btn-primary",
+        "secondary": "btn-secondary",
+        "info": "btn-info",
+        "warning": "btn-warning",
+        "danger": "btn-danger",
+        "success": "btn-success"
+    }
+}
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',  # Añade esta línea
     "corsheaders.middleware.CorsMiddleware",
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -75,7 +288,7 @@ ROOT_URLCONF = 'core.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'tr4cking_rest_api' / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -128,12 +341,11 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
-
-TIME_ZONE = 'UTC'
+LANGUAGE_CODE = 'es'  # Cambia 'en-us' por 'es'
+TIME_ZONE = 'America/Asuncion'  # Ajusta a tu zona horaria
 
 USE_I18N = True
-
+USE_L10N = True
 USE_TZ = True
 
 
@@ -141,6 +353,13 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_DIRS = [
+    BASE_DIR / 'tr4cking_rest_api' / 'static',
+]
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field

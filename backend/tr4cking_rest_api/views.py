@@ -6,17 +6,20 @@ from django.contrib.auth.models import Group, Permission
 from .models import (
     Persona, UsuarioPersona, Cliente, Pasajero, Empresa,
     Empleado, Localidad, Parada, Bus, Asiento, Ruta, DetalleRuta,
-    Viaje, Pasaje, Reserva, 
-    Encomienda
+    Viaje, Pasaje, Reserva, Encomienda, TipoDocumento, Timbrado,
+    CabeceraFactura, DetalleFactura, HistorialFactura, Caja,
+    CabeceraCaja, DetalleCaja
 )
 from .serializers import (
     UserSerializer, GroupSerializer, PermissionSerializer,
     PersonaSerializer, UsuarioPersonaSerializer, ClienteSerializer, 
     PasajeroSerializer, EmpresaSerializer, EmpleadoSerializer, LocalidadSerializer,
     ParadaSerializer, BusSerializer, AsientoSerializer, RutaSerializer,
-    DetalleRutaSerializer, ViajeSerializer,
-    PasajeSerializer, ReservaSerializer, 
-    EncomiendaSerializer
+    DetalleRutaSerializer, ViajeSerializer,PasajeSerializer, 
+    ReservaSerializer, EncomiendaSerializer, TipoDocumentoSerializer,
+    TimbradoSerializer, CabeceraFacturaSerializer, DetalleFacturaSerializer,
+    HistorialFacturaSerializer, CajaSerializer, CabeceraCajaSerializer,
+    DetalleCajaSerializer
 )
 
 User = get_user_model()
@@ -230,3 +233,34 @@ class EncomiendaViewSet(viewsets.ModelViewSet):
     serializer_class = EncomiendaSerializer
     permission_classes = [AllowAny]
 
+class TipoDocumentoViewSet(viewsets.ModelViewSet):
+    queryset = TipoDocumento.objects.all()
+    serializer_class = TipoDocumentoSerializer
+
+class TimbradoViewSet(viewsets.ModelViewSet):
+    queryset = Timbrado.objects.all()
+    serializer_class = TimbradoSerializer
+
+class CabeceraFacturaViewSet(viewsets.ModelViewSet):
+    queryset = CabeceraFactura.objects.all()
+    serializer_class = CabeceraFacturaSerializer
+
+class DetalleFacturaViewSet(viewsets.ModelViewSet):
+    queryset = DetalleFactura.objects.all()
+    serializer_class = DetalleFacturaSerializer
+
+class HistorialFacturaViewSet(viewsets.ModelViewSet):
+    queryset = HistorialFactura.objects.all()
+    serializer_class = HistorialFacturaSerializer
+
+class CajaViewSet(viewsets.ModelViewSet):
+    queryset = Caja.objects.all()
+    serializer_class = CajaSerializer
+
+class CabeceraCajaViewSet(viewsets.ModelViewSet):
+    queryset = CabeceraCaja.objects.all()
+    serializer_class = CabeceraCajaSerializer
+
+class DetalleCajaViewSet(viewsets.ModelViewSet):
+    queryset = DetalleCaja.objects.all()
+    serializer_class = DetalleCajaSerializer

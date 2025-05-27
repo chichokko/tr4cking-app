@@ -5,9 +5,11 @@ from .views import (
     UserViewSet, GroupViewSet, PermissionViewSet,
     PersonaViewSet, UsuarioPersonaViewSet, ClienteViewSet, PasajeroViewSet,
     EmpresaViewSet, EmpleadoViewSet, LocalidadViewSet, ParadaViewSet, BusViewSet,
-    AsientoViewSet, RutaViewSet, DetalleRutaViewSet,
-    ViajeViewSet, PasajeViewSet, ReservaViewSet, 
-    EncomiendaViewSet
+    AsientoViewSet, RutaViewSet, DetalleRutaViewSet, ViajeViewSet, 
+    PasajeViewSet, ReservaViewSet, EncomiendaViewSet,
+    TipoDocumentoViewSet, TimbradoViewSet, CabeceraFacturaViewSet,
+    DetalleFacturaViewSet, HistorialFacturaViewSet, CajaViewSet,
+    CabeceraCajaViewSet, DetalleCajaViewSet
 )
 
 
@@ -48,6 +50,16 @@ router.register(r'pasajes', PasajeViewSet)
 router.register(r'reservas', ReservaViewSet)
 #router.register(r'detalle-reservas', DetalleReservaViewSet)
 router.register(r'encomiendas', EncomiendaViewSet)
+
+router.register(r'tipos-documento', TipoDocumentoViewSet)
+router.register(r'timbrados', TimbradoViewSet)
+router.register(r'facturas', CabeceraFacturaViewSet)
+router.register(r'detalles-factura', DetalleFacturaViewSet)
+router.register(r'historial-facturas', HistorialFacturaViewSet)
+router.register(r'cajas', CajaViewSet)
+router.register(r'cabecera-caja', CabeceraCajaViewSet)
+router.register(r'detalle-caja', DetalleCajaViewSet)
+
 
 
 

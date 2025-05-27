@@ -1,12 +1,28 @@
+from django import forms
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
+from django.contrib import messages
 from .models import (
     Persona, UsuarioPersona, Cliente, Pasajero,
     Empresa, Empleado, Localidad, Parada,
     Bus, Asiento, Ruta, DetalleRuta,
-    Viaje, Pasaje, Reserva, Encomienda
+    Viaje, Pasaje, Reserva, Encomienda,
+    TipoDocumento, Timbrado, CabeceraFactura, DetalleFactura, HistorialFactura,
+    Caja, CabeceraCaja, DetalleCaja
 )
+
+admin.site.site_header = 'Tr4cking'
+admin.site.site_title = 'Tr4cking Admin Portal'
+admin.site.index_title = 'Bienvenido al Portal Administrativo de Tr4cking'
+
+# Personalización del tema de colores y estilos
+class CustomAdminSite(admin.AdminSite):
+    def each_context(self, request):
+        context = super().each_context(request)
+        context['custom_var'] = 'custom_value'  # Variables personalizadas
+        return context
 
 # Inline Models
 class UsuarioPersonaInline(admin.StackedInline):
@@ -21,6 +37,12 @@ class DetalleRutaInline(admin.TabularInline):
 class AsientoInline(admin.TabularInline):
     model = Asiento
     extra = 1
+
+class DetalleFacturaInline(admin.TabularInline):
+    model = DetalleFactura
+    extra = 1
+    fields = ('pasaje', 'encomienda', 'cantidad', 'precio_unitario', 'iva_porcentaje', 'subtotal')
+    readonly_fields = ('subtotal',)
 
 # Custom User Admin
 class CustomUserAdmin(UserAdmin):
@@ -125,6 +147,16 @@ class ViajeAdmin(admin.ModelAdmin):
     date_hierarchy = 'fecha'
     search_fields = ('ruta__nombre', 'bus__placa')
 
+    actions = ['marcar_como_activo', 'marcar_como_inactivo']
+
+    def marcar_como_activo(self, request, queryset):
+        queryset.update(activo=True)
+    marcar_como_activo.short_description = "Marcar viajes seleccionados como activos"
+
+    def marcar_como_inactivo(self, request, queryset):
+        queryset.update(activo=False)
+    marcar_como_inactivo.short_description = "Marcar viajes seleccionados como inactivos"
+
 @admin.register(Reserva)
 class ReservaAdmin(admin.ModelAdmin):
     list_display = ('id_reserva', 'cliente', 'estado', 'fecha_reserva')
@@ -159,4 +191,131 @@ class EncomiendaAdmin(admin.ModelAdmin):
             'fields': ('flete',)
         }),
     )
+
+# Facturación y Documentos
+@admin.register(TipoDocumento)
+class TipoDocumentoAdmin(admin.ModelAdmin):
+    list_display = ('codigo', 'nombre', 'requiere_cliente_registrado')
+    search_fields = ('codigo', 'nombre')
+    list_filter = ('requiere_cliente_registrado',)
+
+@admin.register(Timbrado)
+class TimbradoAdmin(admin.ModelAdmin):
+    list_display = ('numero_timbrado', 'fecha_inicio', 'fecha_fin', 'activo')
+    search_fields = ('numero_timbrado',)
+    list_filter = ('activo',)
+    date_hierarchy = 'fecha_inicio'
+
+class CabeceraFacturaForm(forms.ModelForm):
+    class Meta:
+        model = CabeceraFactura
+        fields = '__all__'
+
+    def clean(self):
+        cleaned_data = super().clean()
+        # Verificar si hay una caja abierta
+        caja_abierta = Caja.objects.filter(estado='Abierta').exists()
+        if not caja_abierta:
+            raise ValidationError(
+                'No se puede crear una factura sin una caja abierta. '
+                'Por favor, abra una caja primero.'
+            )
+        return cleaned_data
+
+@admin.register(CabeceraFactura)
+class CabeceraFacturaAdmin(admin.ModelAdmin):
+    form = CabeceraFacturaForm
+    list_display = ('numero_factura', 'cliente', 'empleado', 'fecha_factura', 'monto_total', 'estado')
+    list_filter = ('estado', 'condicion', 'timbrado')
+    search_fields = ('numero_factura', 'cliente__razon_social')
+    date_hierarchy = 'fecha_factura'
+    inlines = [DetalleFacturaInline]
+    fieldsets = (
+        ('Información General', {
+            'fields': ('numero_factura', 'cliente', 'empleado', 'timbrado', 'parada')
+        }),
+        ('Condiciones', {
+            'fields': ('condicion', 'estado')
+        }),
+        ('Montos', {
+            'fields': ('monto_total', 'monto_exenta', 'monto_iva_5', 'monto_iva_10')
+        }),
+    )
+
+    def has_add_permission(self, request):
+        # Verificar si hay una caja abierta antes de mostrar el botón "Añadir"
+        if not Caja.objects.filter(estado='Abierta').exists():
+            messages.warning(request, 'No se pueden crear facturas sin una caja abierta')
+            return False
+        return True
+
+    def save_model(self, request, obj, form, change):
+        if not change:  # Solo para nuevas facturas
+            # Verificar nuevamente al guardar por seguridad
+            if not Caja.objects.filter(estado='Abierta').exists():
+                messages.error(request, 'No se puede guardar la factura sin una caja abierta')
+                return
+        super().save_model(request, obj, form, change)
+
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+        caja_abierta = Caja.objects.filter(estado='Abierta').first()
+        if caja_abierta:
+            extra_context['caja_actual'] = f"Caja abierta: {caja_abierta.nombre}"
+        else:
+            extra_context['caja_actual'] = "No hay caja abierta"
+        return super().changelist_view(request, extra_context=extra_context)
+
+@admin.register(DetalleFactura)
+class DetalleFacturaAdmin(admin.ModelAdmin):
+    list_display = ('factura', 'get_detalle', 'cantidad', 'precio_unitario', 'subtotal')
+    list_filter = ('factura__estado',)
+    search_fields = ('factura__numero_factura', 'descripcion')
+
+    def get_detalle(self, obj):
+        if obj.pasaje:
+            return f"Pasaje: {obj.pasaje}"
+        elif obj.encomienda:
+            return f"Encomienda: {obj.encomienda}"
+        return obj.descripcion
+    get_detalle.short_description = 'Detalle'
+
+@admin.register(HistorialFactura)
+class HistorialFacturaAdmin(admin.ModelAdmin):
+    list_display = ('factura', 'fecha_cambio', 'campo_modificado', 'empleado')
+    list_filter = ('campo_modificado',)
+    search_fields = ('factura__numero_factura',)
+    date_hierarchy = 'fecha_cambio'
+    readonly_fields = ('fecha_cambio',)
+
+# Cajas
+class DetalleCajaInline(admin.TabularInline):
+    model = DetalleCaja
+    extra = 1
+
+@admin.register(Caja)
+class CajaAdmin(admin.ModelAdmin):
+    list_display = ('nombre', 'estado', 'fecha_creacion', 'monto_inicial')
+    list_filter = ('estado',)
+    search_fields = ('nombre',)
+    date_hierarchy = 'fecha_creacion'
+
+@admin.register(CabeceraCaja)
+class CabeceraCajaAdmin(admin.ModelAdmin):
+    list_display = ('caja', 'empleado', 'tipo_mov', 'fecha_mov', 'monto_inical', 'monto_final')
+    list_filter = ('tipo_mov', 'caja')
+    search_fields = ('caja__nombre', 'empleado__cedula__nombre')
+    date_hierarchy = 'fecha_mov'
+    inlines = [DetalleCajaInline]
+
+@admin.register(DetalleCaja)
+class DetalleCajaAdmin(admin.ModelAdmin):
+    list_display = ('cabecera_caja', 'tipo_transaccion', 'monto', 'fecha_transaccion', 'get_factura')
+    list_filter = ('tipo_transaccion',)
+    search_fields = ('descripcion', 'factura__numero_factura')
+    date_hierarchy = 'fecha_transaccion'
+
+    def get_factura(self, obj):
+        return obj.factura.numero_factura if obj.factura else '-'
+    get_factura.short_description = 'Factura'
 

@@ -168,7 +168,7 @@ class Asiento(models.Model):
     bus = models.ForeignKey(Bus, on_delete=models.CASCADE)
     numero_asiento = models.IntegerField()
     estado = models.CharField(max_length=20, choices=ESTADOS_ASIENTO, default='Disponible')
-    tipo_asiento = models.CharField(max_length=20, choices=TIPOS_ASIENTO, blank=True, null=True)
+    tipo_asiento = models.CharField(max_length=20, choices=TIPOS_ASIENTO, default='Semi-cama',blank=True, null=True)
 
     class Meta:
         unique_together = ('bus', 'numero_asiento')
@@ -288,18 +288,92 @@ class Encomienda(models.Model):
     def __str__(self):
         return f"Encomienda #{self.id_encomienda} - {self.get_tipo_envio_display()}"
 
-@receiver(post_save, sender=Pasaje)
-def actualizar_estado_asiento(sender, instance, created, **kwargs):
-    if created:  # Solo cuando se crea un nuevo pasaje
-        asiento = instance.asiento
-        asiento.estado = 'Ocupado'
-        asiento.save()
+class TipoDocumento(models.Model):
+    nombre = models.CharField(max_length=50)
+    codigo = models.CharField(max_length=10, unique=True)
+    descripcion = models.TextField()
+    requiere_cliente_registrado = models.BooleanField(default=False)
+    
+    def __str__(self):
+        return f"{self.codigo} - {self.nombre}"
 
-@receiver(post_delete, sender=Pasaje)
-def restaurar_estado_asiento(sender, instance, **kwargs):
-    asiento = instance.asiento
-    asiento.estado = 'Disponible'
-    asiento.save()
+class Timbrado(models.Model):
+    numero_timbrado = models.CharField(max_length=15, unique=True)
+    fecha_inicio = models.DateField()
+    fecha_fin = models.DateField()
+    activo = models.BooleanField(default=True)
+    
+    def __str__(self):
+        return self.numero_timbrado
+
+class CabeceraFactura(models.Model):
+    cliente = models.ForeignKey(Cliente, null=True, blank=True, on_delete=models.SET_NULL)
+    empleado = models.ForeignKey(Empleado, on_delete=models.CASCADE)
+    timbrado = models.ForeignKey(Timbrado, on_delete=models.CASCADE)
+    parada = models.ForeignKey(Parada, on_delete=models.CASCADE, null=True, blank=True)
+    numero_factura = models.TextField(unique=True)
+    fecha_factura = models.DateField(auto_now_add=True)
+    condicion = models.CharField(max_length=30, default='Contado')
+    monto_total = models.DecimalField(max_digits=10, decimal_places=2)
+    monto_exenta = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    monto_iva_10 = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    monto_iva_5 = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    estado = models.CharField(max_length=20)
+    def __str__(self):
+        return f"Factura {self.numero_factura}"
+
+class DetalleFactura(models.Model):
+    factura = models.ForeignKey(CabeceraFactura, on_delete=models.CASCADE)
+    pasaje = models.ForeignKey(Pasaje, null=True, blank=True, on_delete=models.SET_NULL)
+    encomienda = models.ForeignKey(Encomienda, null=True, blank=True, on_delete=models.SET_NULL)
+    cantidad = models.SmallIntegerField(default=1)
+    precio_unitario = models.DecimalField(max_digits=10, decimal_places=2)
+    descripcion = models.CharField(max_length=100)
+    iva_porcentaje = models.SmallIntegerField()
+    subtotal = models.DecimalField(max_digits=12, decimal_places=2)
+    
+    def __str__(self):
+        return f"Detalle {self.id} - Factura {self.factura.numero_factura}"
+    
+
+class HistorialFactura(models.Model):
+    factura = models.ForeignKey(CabeceraFactura, on_delete=models.CASCADE)
+    fecha_cambio = models.DateTimeField(auto_now_add=True)
+    campo_modificado = models.CharField(max_length=30)
+    valor_anterior = models.TextField(blank=True, null=True)
+    valor_nuevo = models.TextField(blank=True, null=True)
+    empleado = models.ForeignKey(Empleado, on_delete=models.CASCADE)
+    def __str__(self):
+        return f"Historial {self.id} - Factura {self.factura.numero_factura}"
+    
+class Caja(models.Model):
+    nombre = models.TextField()
+    estado = models.CharField(max_length=20)
+    fecha_creacion = models.DateField()
+    monto_inicial = models.IntegerField()
+
+    def __str__(self):
+        return self.nombre
+    
+class CabeceraCaja(models.Model):
+    tipo_mov = models.CharField(max_length=20)
+    fecha_mov = models.DateTimeField()
+    monto_inical = models.DecimalField(max_digits=12, decimal_places=2)
+    monto_final = models.DecimalField(max_digits=12, decimal_places=2)
+    caja = models.ForeignKey(Caja, on_delete=models.CASCADE)
+    empleado = models.ForeignKey(Empleado, on_delete=models.CASCADE)
+    def __str__(self):
+        return f"Movimiento {self.id} - Caja {self.caja.nombre}"
+    
+class DetalleCaja(models.Model):
+    descripcion = models.TextField(blank=True, null=True)
+    tipo_transaccion = models.CharField(max_length=50)
+    monto = models.IntegerField()
+    fecha_transaccion = models.DateTimeField()
+    factura = models.ForeignKey(CabeceraFactura, null=True, blank=True, on_delete=models.SET_NULL)
+    cabecera_caja = models.ForeignKey(CabeceraCaja, on_delete=models.CASCADE)
+    def __str__(self):
+        return f"Detalle {self.id} - Caja {self.cabecera_caja.caja.nombre}"
 
 
 
