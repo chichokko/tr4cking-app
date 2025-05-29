@@ -22,6 +22,10 @@ class Persona(models.Model):
 
     def __str__(self):
         return f"{self.nombre} {self.apellido}"
+    class Meta:
+        verbose_name = "Persona"
+        verbose_name_plural = "Personas"
+
 
 class UsuarioPersona(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, primary_key=True, on_delete=models.CASCADE)
@@ -33,6 +37,8 @@ class UsuarioPersona(models.Model):
     )
 
     class Meta:
+        verbose_name = "Usuario Persona"
+        verbose_name_plural = "Usuarios Personas"
         db_table = 'usuario_persona'
 
 # -----------------------------------------------
@@ -61,6 +67,9 @@ class Cliente(models.Model):
 
     def __str__(self):
         return self.razon_social
+    class Meta:
+        verbose_name = "Cliente"
+        verbose_name_plural = "Clientes"
 
 # -----------------------------------------------
 # Pasajeros (nuevo)
@@ -75,6 +84,10 @@ class Pasajero(models.Model):
 
     def __str__(self):
         return f"{self.cedula.nombre} {self.cedula.apellido}"
+    
+    class Meta:
+        verbose_name = "Pasajero"
+        verbose_name_plural = "Pasajeros"
 
 # -----------------------------------------------
 # Empresas y Sucursales
@@ -89,6 +102,10 @@ class Empresa(models.Model):
 
     def __str__(self):
         return self.nombre
+    
+    class Meta:
+        verbose_name = "Empresa"
+        verbose_name_plural = "Empresas"
 
 
 class Empleado(models.Model):
@@ -106,6 +123,10 @@ class Empleado(models.Model):
 
     def __str__(self):
         return f"{self.cedula.nombre} {self.cedula.apellido} - {self.empresa.nombre} ({self.cargo})"
+    class Meta:
+        verbose_name = "Empleado"
+        verbose_name_plural = "Empleados"
+
 # -----------------------------------------------
 # Geografía
 # -----------------------------------------------
@@ -116,6 +137,9 @@ class Localidad(models.Model):
 
     def __str__(self):
         return self.nombre
+    class Meta:
+        verbose_name = "Localidad"
+        verbose_name_plural = "Localidades"
 
 class Parada(models.Model):
     id_parada = models.BigAutoField(primary_key=True)
@@ -152,6 +176,10 @@ class Bus(models.Model):
 
     def __str__(self):
         return f"{self.empresa.nombre} - {self.placa} ({self.capacidad})"
+    class Meta:
+        verbose_name = "Bus"
+        verbose_name_plural = "Buses"
+        #unique_together = ('placa', 'empresa')
 
 class Asiento(models.Model):
     ESTADOS_ASIENTO = [
@@ -171,7 +199,10 @@ class Asiento(models.Model):
     tipo_asiento = models.CharField(max_length=20, choices=TIPOS_ASIENTO, default='Semi-cama',blank=True, null=True)
 
     class Meta:
+        verbose_name = "Asiento"
+        verbose_name_plural = "Asientos"
         unique_together = ('bus', 'numero_asiento')
+        
     def __str__(self):
         return f"{self.bus.empresa.nombre} - {self.bus.placa} - Asiento {self.numero_asiento} ({self.tipo_asiento})"
 
@@ -186,6 +217,10 @@ class Ruta(models.Model):
 
     def __str__(self):
         return self.nombre
+    class Meta:
+        verbose_name = "Ruta"
+        verbose_name_plural = "Rutas"
+
 
 class DetalleRuta(models.Model):
     ruta = models.ForeignKey(Ruta, on_delete=models.CASCADE)
@@ -194,6 +229,8 @@ class DetalleRuta(models.Model):
     orden = models.IntegerField()
 
     class Meta:
+        verbose_name = "Detalle Ruta"
+        verbose_name_plural = "Detalles de Rutas"
         unique_together = [('ruta', 'parada')]
         ordering = ['orden']
 
@@ -220,6 +257,8 @@ class Viaje(models.Model):
     observaciones = models.TextField(blank=True, null=True)
 
     class Meta:
+        verbose_name = "Viaje"
+        verbose_name_plural = "Viajes"
         unique_together = ('bus', 'fecha')
 
     def __str__(self):
@@ -240,6 +279,11 @@ class Reserva(models.Model):
     estado = models.CharField(max_length=20, choices=ESTADOS_RESERVA, default='Pendiente')
     fecha_reserva = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        verbose_name = "Reserva"
+        verbose_name_plural = "Reservas"
+        unique_together = ('cliente', 'fecha_reserva')
+
     def __str__(self):
         return f"Reserva #{self.id_reserva} - {self.cliente}"
     
@@ -249,6 +293,10 @@ class Pasaje(models.Model):
     viaje = models.ForeignKey(Viaje, on_delete=models.CASCADE)
     asiento = models.ForeignKey(Asiento, on_delete=models.CASCADE)
     pasajero = models.ForeignKey(Pasajero, on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = "Pasaje"
+        verbose_name_plural = "Pasajes"
 
     def __str__(self):
         return f"Pasaje {self.viaje.ruta.nombre} - Asiento {self.asiento.numero_asiento} - Pasajero {self.pasajero}"
@@ -285,6 +333,10 @@ class Encomienda(models.Model):
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     fecha_actualizacion = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        verbose_name = "Encomienda"
+        verbose_name_plural = "Encomiendas"
+
     def __str__(self):
         return f"Encomienda #{self.id_encomienda} - {self.get_tipo_envio_display()}"
 
@@ -302,6 +354,10 @@ class Timbrado(models.Model):
     fecha_inicio = models.DateField()
     fecha_fin = models.DateField()
     activo = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name = "Timbrado"
+        verbose_name_plural = "Timbrados"
     
     def __str__(self):
         return self.numero_timbrado
@@ -319,6 +375,12 @@ class CabeceraFactura(models.Model):
     monto_iva_10 = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     monto_iva_5 = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     estado = models.CharField(max_length=20)
+
+    class Meta:
+        verbose_name = "Cabecera de Factura"
+        verbose_name_plural = "Cabeceras de Facturas"
+        ordering = ['-fecha_factura']
+
     def __str__(self):
         return f"Factura {self.numero_factura}"
 
@@ -331,6 +393,11 @@ class DetalleFactura(models.Model):
     descripcion = models.CharField(max_length=100)
     iva_porcentaje = models.SmallIntegerField()
     subtotal = models.DecimalField(max_digits=12, decimal_places=2)
+
+    class Meta:
+        verbose_name = "Detalle de Factura"
+        verbose_name_plural = "Detalles de Facturas"
+        unique_together = ('factura', 'pasaje', 'encomienda')
     
     def __str__(self):
         return f"Detalle {self.id} - Factura {self.factura.numero_factura}"
@@ -343,6 +410,12 @@ class HistorialFactura(models.Model):
     valor_anterior = models.TextField(blank=True, null=True)
     valor_nuevo = models.TextField(blank=True, null=True)
     empleado = models.ForeignKey(Empleado, on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = "Historial de Factura"
+        verbose_name_plural = "Historiales de Facturas"
+        ordering = ['-fecha_cambio']
+
     def __str__(self):
         return f"Historial {self.id} - Factura {self.factura.numero_factura}"
     
@@ -351,6 +424,11 @@ class Caja(models.Model):
     estado = models.CharField(max_length=20)
     fecha_creacion = models.DateField()
     monto_inicial = models.IntegerField()
+
+    class Meta:
+        verbose_name = "Caja"
+        verbose_name_plural = "Cajas"
+        unique_together = ('nombre', 'estado')
 
     def __str__(self):
         return self.nombre
@@ -362,6 +440,12 @@ class CabeceraCaja(models.Model):
     monto_final = models.DecimalField(max_digits=12, decimal_places=2)
     caja = models.ForeignKey(Caja, on_delete=models.CASCADE)
     empleado = models.ForeignKey(Empleado, on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = "Cabecera de Caja"
+        verbose_name_plural = "Cabeceras de Cajas"
+        ordering = ['-fecha_mov']
+
     def __str__(self):
         return f"Movimiento {self.id} - Caja {self.caja.nombre}"
     
@@ -372,6 +456,12 @@ class DetalleCaja(models.Model):
     fecha_transaccion = models.DateTimeField()
     factura = models.ForeignKey(CabeceraFactura, null=True, blank=True, on_delete=models.SET_NULL)
     cabecera_caja = models.ForeignKey(CabeceraCaja, on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = "Detalle de Caja"
+        verbose_name_plural = "Detalles de Cajas"
+        ordering = ['-fecha_transaccion']
+
     def __str__(self):
         return f"Detalle {self.id} - Caja {self.cabecera_caja.caja.nombre}"
 

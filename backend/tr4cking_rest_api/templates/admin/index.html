@@ -1,0 +1,244 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block content %}
+<style>
+.dashboard-container {
+    background: var(--color-base-900, #18181b);
+    border-radius: 12px;
+    padding: 32px 24px;
+    margin: 32px auto;
+    max-width: 1200px;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+}
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+}
+.dashboard-header h2 {
+    color: var(--color-primary-500, #a855f7);
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0;
+}
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 24px;
+    margin-bottom: 32px;
+}
+.stat-card {
+    background: var(--color-base-800, #27272a);
+    border-radius: 10px;
+    padding: 24px;
+    text-align: center;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+    transition: transform 0.2s;
+}
+.stat-card:hover {
+    transform: translateY(-2px);
+}
+.stat-card h3 {
+    margin-bottom: 8px;
+    color: var(--color-primary-400, #c084fc);
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+.stat-card p {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--color-base-100, #fafafa);
+    margin: 0;
+}
+.charts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 24px;
+    margin-top: 32px;
+}
+.chart-container {
+    background: var(--color-base-800, #27272a);
+    border-radius: 10px;
+    padding: 24px;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+}
+.button-group {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.button {
+    padding: 10px 24px;
+    background: var(--color-primary-600, #9333ea);
+    color: #fff;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: background 0.2s;
+    border: none;
+    cursor: pointer;
+}
+.button:hover {
+    background: var(--color-primary-700, #7e22ce);
+}
+.button.secondary {
+    background: var(--color-base-700);
+}
+.button.secondary:hover {
+    background: var(--color-base-600);
+}
+</style>
+
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h2>Panel de Control</h2>
+        <div class="button-group">
+            <a href="{% url 'admin:tr4cking_rest_api_cabecerafactura_changelist' %}?export=csv" class="button">
+                Exportar Ventas (CSV)
+            </a>
+            <button onclick="window.print()" class="button secondary">
+                Imprimir Reporte
+            </button>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <h3>Ventas Totales</h3>
+            <p>{{ ventas_totales|default_if_none:"0" }}</p>
+        </div>
+        <div class="stat-card">
+            <h3>Rutas Activas</h3>
+            <p>{{ rutas_activas|default_if_none:"0" }}</p>
+        </div>
+        <div class="stat-card">
+            <h3>Encomiendas</h3>
+            <p>{{ total_encomiendas|default_if_none:"0" }}</p>
+        </div>
+    </div>
+
+    <div class="charts-grid">
+        <div class="chart-container">
+            <canvas id="mainChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <canvas id="lineChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // Función helper para crear colores con opacidad
+    const createColor = (r, g, b) => (opacity = 1) => `rgba(${r}, ${g}, ${b}, ${opacity})`;
+    
+    // Colores predefinidos
+    const colors = {
+        purple: createColor(168, 85, 247),
+        green: createColor(34, 197, 94),
+        blue: createColor(59, 130, 246)
+    };
+
+    // Configuración común para los gráficos
+    const commonOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                labels: {
+                    color: '#fafafa'
+                }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: { color: '#fafafa' },
+                grid: { color: 'rgba(250,250,250,0.08)' }
+            },
+            x: {
+                ticks: { color: '#fafafa' },
+                grid: { display: false }
+            }
+        }
+    };
+
+    // Gráfico de barras
+    try {
+        const barCtx = document.getElementById('mainChart').getContext('2d');
+        new Chart(barCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Ventas', 'Rutas Activas', 'Encomiendas'],
+                datasets: [{
+                    label: 'Estadísticas últimos 30 días',
+                    data: [
+                        {{ ventas_totales|default_if_none:"0" }},
+                        {{ rutas_activas|default_if_none:"0" }},
+                        {{ total_encomiendas|default_if_none:"0" }}
+                    ],
+                    backgroundColor: [
+                        colors.purple(0.8),
+                        colors.green(0.8),
+                        colors.blue(0.8)
+                    ],
+                    borderRadius: 8,
+                    borderSkipped: false
+                }]
+            },
+            options: {
+                ...commonOptions,
+                plugins: {
+                    ...commonOptions.plugins,
+                    title: {
+                        display: true,
+                        text: 'Resumen General',
+                        color: '#fafafa',
+                        font: { size: 16 }
+                    }
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Error al crear el gráfico de barras:', error);
+    }
+
+    // Gráfico de líneas
+    try {
+        const lineCtx = document.getElementById('lineChart').getContext('2d');
+        new Chart(lineCtx, {
+            type: 'line',
+            data: {
+                labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'],
+                datasets: [{
+                    label: 'Ventas Mensuales',
+                    data: [65, 59, 80, 81, 56, 55],
+                    borderColor: colors.purple(1),
+                    backgroundColor: colors.purple(0.1),
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                ...commonOptions,
+                plugins: {
+                    ...commonOptions.plugins,
+                    title: {
+                        display: true,
+                        text: 'Tendencia de Ventas',
+                        color: '#fafafa',
+                        font: { size: 16 }
+                    }
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Error al crear el gráfico de líneas:', error);
+    }
+});
+</script>
+{% endblock %}

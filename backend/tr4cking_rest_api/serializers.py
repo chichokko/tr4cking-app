@@ -144,13 +144,11 @@ class AsientoSerializer(serializers.ModelSerializer):
         fields = ['id_asiento', 'bus', 'bus_placa', 'numero_asiento', 'estado', 'tipo_asiento']
 
 class DetalleRutaSerializer(serializers.ModelSerializer):
-    parada_nombre = serializers.CharField(source='parada.nombre', read_only=True)
-    localidad_nombre = serializers.CharField(source='parada.localidad.nombre', read_only=True)
+    parada = ParadaSerializer(read_only=True)  # Include full parada details
 
     class Meta:
         model = DetalleRuta
-        fields = ['ruta', 'parada', 'parada_nombre',
-                  'localidad_nombre', 'hora_salida', 'orden']
+        fields = ['ruta', 'parada', 'hora_salida', 'orden']
 
 class RutaSerializer(serializers.ModelSerializer):
     detalles = DetalleRutaSerializer(many=True, read_only=True, source='detalleruta_set')
@@ -169,16 +167,14 @@ class HorarioSerializer(serializers.ModelSerializer):
         fields = ['id_horario', 'ruta', 'ruta_details', 'hora_salida', 'dias_semana', 'activo']
 """
 class ViajeSerializer(serializers.ModelSerializer):
-    #horario_details = HorarioSerializer(source='horario', read_only=True)
-    nombre_ruta = serializers.CharField(source='ruta.nombre', read_only=True)
     ruta_details = RutaSerializer(source='ruta', read_only=True)
-    bus_placa = serializers.CharField(source='bus.placa', read_only=True)
     bus_details = BusSerializer(source='bus', read_only=True)
+    bus_placa = serializers.CharField(source='bus.placa', read_only=True)
 
     class Meta:
         model = Viaje
-        fields = ['id_viaje','ruta','nombre_ruta', 'ruta_details', 'bus','bus_placa', 'bus_details',
-                 'fecha', 'activo', 'observaciones']
+        fields = ['id_viaje', 'ruta', 'ruta_details', 'bus', 'bus_placa', 
+                 'bus_details', 'fecha', 'activo', 'observaciones']
 
 
 class ReservaSerializer(serializers.ModelSerializer):

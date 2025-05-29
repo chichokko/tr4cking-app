@@ -31,7 +31,8 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'jazzmin',
+    #'jazzmin',
+    'unfold',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -43,221 +44,10 @@ INSTALLED_APPS = [
     'tr4cking_rest_api'
 ]
 
-JAZZMIN_SETTINGS = {
-    # Configuración básica
-    "site_title": "Tr4cking Admin",
-    "site_header": "Tr4cking",
-    "site_brand": "Tr4cking",
-    "site_logo": "tr4cking_rest_api/images/logo.png",
-    "welcome_sign": "Bienvenido al Panel de Administración",
-    "copyright": "Tr4cking © 2025",
-
-    # Configuración de búsqueda y usuario
-    "search_model": ["auth.User", "tr4cking_rest_api.Cliente"],
-    "user_avatar": None,
-
-    # Enlaces del menú superior
-    "topmenu_links": [
-        {"name": "Inicio", "url": "admin:index", "permissions": ["auth.view_user"]},
-        {"model": "auth.User"},
-        {"name": "Ver Sitio", "url": "http://localhost:5173", "new_window": True},
-    ],
-
-    # Configuración del sidebar
-    "show_sidebar": True,
-    "navigation_expanded": True,
-
-    # Iconos para modelos
-    "icons": {
-        # Auth
-        "auth": "fas fa-users-cog",
-        "auth.user": "fas fa-user",
-        "auth.group": "fas fa-users",
-        
-        # Personas
-        "tr4cking_rest_api.persona": "fas fa-id-card",
-        "tr4cking_rest_api.usuariopersona": "fas fa-user-circle",
-        "tr4cking_rest_api.cliente": "fas fa-user-tie",
-        "tr4cking_rest_api.pasajero": "fas fa-walking",
-        
-        # Empresas
-        "tr4cking_rest_api.empresa": "fas fa-building",
-        "tr4cking_rest_api.empleado": "fas fa-user-shield",
-        
-        # Geografía
-        "tr4cking_rest_api.localidad": "fas fa-map-marker-alt",
-        "tr4cking_rest_api.parada": "fas fa-map-pin",
-        
-        # Transporte
-        "tr4cking_rest_api.bus": "fas fa-bus",
-        "tr4cking_rest_api.asiento": "fas fa-chair",
-        "tr4cking_rest_api.ruta": "fas fa-route",
-        "tr4cking_rest_api.detalleruta": "fas fa-map-signs",
-        
-        # Viajes
-        "tr4cking_rest_api.viaje": "fas fa-road",
-        "tr4cking_rest_api.pasaje": "fas fa-ticket-alt",
-        "tr4cking_rest_api.reserva": "fas fa-calendar-check",
-        "tr4cking_rest_api.encomienda": "fas fa-box",
-        
-        # Facturación
-        "tr4cking_rest_api.tipodocumento": "fas fa-file-alt",
-        "tr4cking_rest_api.timbrado": "fas fa-stamp",
-        "tr4cking_rest_api.cabecerafactura": "fas fa-file-invoice",
-        "tr4cking_rest_api.detallefactura": "fas fa-receipt",
-        "tr4cking_rest_api.historialfactura": "fas fa-history",
-        
-        # Caja
-        "tr4cking_rest_api.caja": "fas fa-cash-register",
-        "tr4cking_rest_api.cabeceracaja": "fas fa-money-check-alt",
-        "tr4cking_rest_api.detallecaja": "fas fa-money-bill-wave",
-    },
-
-    # Organización del menú
-    "menu": [
-        {
-            "name": "Autenticación",
-            "icon": "fas fa-users-cog",
-            "models": [
-                "auth.user",
-                "auth.group"
-            ]
-        },
-        {
-            "name": "Personas",
-            "icon": "fas fa-users",
-            "models": [
-                "tr4cking_rest_api.persona",
-                "tr4cking_rest_api.usuariopersona",
-                "tr4cking_rest_api.cliente",
-                "tr4cking_rest_api.pasajero"
-            ]
-        },
-        {
-            "name": "Empresas",
-            "icon": "fas fa-building",
-            "models": [
-                "tr4cking_rest_api.empresa",
-                "tr4cking_rest_api.empleado"
-            ]
-        },
-        {
-            "name": "Geografía",
-            "icon": "fas fa-map",
-            "models": [
-                "tr4cking_rest_api.localidad",
-                "tr4cking_rest_api.parada"
-            ]
-        },
-        {
-            "name": "Transporte",
-            "icon": "fas fa-bus",
-            "models": [
-                "tr4cking_rest_api.bus",
-                "tr4cking_rest_api.asiento",
-                "tr4cking_rest_api.ruta",
-                "tr4cking_rest_api.detalleruta"
-            ]
-        },
-        {
-            "name": "Viajes y Servicios",
-            "icon": "fas fa-road",
-            "models": [
-                "tr4cking_rest_api.viaje",
-                "tr4cking_rest_api.pasaje",
-                "tr4cking_rest_api.reserva",
-                "tr4cking_rest_api.encomienda"
-            ]
-        },
-        {
-            "name": "Facturación",
-            "icon": "fas fa-file-invoice-dollar",
-            "models": [
-                "tr4cking_rest_api.tipodocumento",
-                "tr4cking_rest_api.timbrado",
-                "tr4cking_rest_api.cabecerafactura",
-                "tr4cking_rest_api.detallefactura",
-                "tr4cking_rest_api.historialfactura"
-            ]
-        },
-        {
-            "name": "Caja",
-            "icon": "fas fa-cash-register",
-            "models": [
-                "tr4cking_rest_api.caja",
-                "tr4cking_rest_api.cabeceracaja",
-                "tr4cking_rest_api.detallecaja"
-            ]
-        }
-    ],
-
-    # Configuración adicional de UI
-    "order_with_respect_to": [
-        "auth",
-        "tr4cking_rest_api.persona",
-        "tr4cking_rest_api.cliente",
-        "tr4cking_rest_api.empresa",
-    ],
-    
-    # Formato y UI
-    "changeform_format": "horizontal_tabs",
-    "changeform_format_overrides": {"auth.user": "collapsible"},
-    "custom_css": None,
-    "custom_js": None,
-    "show_ui_builder": True,
-    
-    # Tema
-    "theme": "darkly",
-    "dark_mode_theme": "darkly",
-    
-    # Clases de botones
-    "button_classes": {
-        "primary": "btn-primary",
-        "secondary": "btn-secondary",
-        "info": "btn-info",
-        "warning": "btn-warning",
-        "danger": "btn-danger",
-        "success": "btn-success"
-    }
-}
-
-# Configuración adicional de UI
-JAZZMIN_UI_TWEAKS = {
-    "navbar_small_text": False,
-    "footer_small_text": False,
-    "body_small_text": False,
-    "brand_small_text": False,
-    "brand_colour": False,
-    "accent": "accent-primary",
-    "navbar": "navbar-dark",
-    "no_navbar_border": True,
-    "navbar_fixed": True,
-    "layout_boxed": False,
-    "footer_fixed": False,
-    "sidebar_fixed": True,
-    "sidebar": "sidebar-dark-primary",
-    "sidebar_nav_small_text": True,
-    "sidebar_disable_expand": False,
-    "sidebar_nav_child_indent": True,
-    "sidebar_nav_compact_style": False,
-    "sidebar_nav_legacy_style": False,
-    "sidebar_nav_flat_style": False,
-    "theme": "darkly",
-    "dark_mode_theme": "darkly",
-    "button_classes": {
-        "primary": "btn-primary",
-        "secondary": "btn-secondary",
-        "info": "btn-info",
-        "warning": "btn-warning",
-        "danger": "btn-danger",
-        "success": "btn-success"
-    }
-}
-
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.locale.LocaleMiddleware',  # Añade esta línea
+    'django.middleware.locale.LocaleMiddleware',  
     "corsheaders.middleware.CorsMiddleware",
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -365,3 +155,212 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+from django.templatetags.static import static
+from django.urls import reverse_lazy
+from django.utils.translation import gettext_lazy as _
+
+UNFOLD = {
+    "SITE_TITLE": "Tr4cking",
+    "SITE_HEADER": "Tr4cking Admin",
+    "SITE_URL": "http://localhost:5173",
+    "SITE_ICON": False,
+    "THEME": "dark",
+    "COLORS": {
+        "primary": {
+            "50": "250 245 255",
+            "100": "243 232 255",
+            "200": "233 213 255",
+            "300": "216 180 254",
+            "400": "192 132 252",
+            "500": "168 85 247",
+            "600": "147 51 234",
+            "700": "126 34 206",
+            "800": "107 33 168",
+            "900": "88 28 135",
+            "950": "59 7 100",
+        },
+    },
+    "SIDEBAR": {
+        "show_search": True,
+        "show_all_applications": True,
+        "collapsible": True,
+        "navigation": [
+            {
+                "title": _("Personas"),
+                "icon": "user",
+                "items": [
+                    {
+                        "title": _("Personas"),
+                        "icon": "person",
+                        "link": reverse_lazy("admin:tr4cking_rest_api_persona_changelist"),
+                    },
+                    {
+                        "title": _("Clientes"),
+                        "icon": "person",
+                        "link": reverse_lazy("admin:tr4cking_rest_api_cliente_changelist"),
+                    },
+                    {
+                        "title": _("Pasajeros"),
+                        "icon": "person",
+                        "link": reverse_lazy("admin:tr4cking_rest_api_pasajero_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": _("Empresas"),
+                "icon": "building-office",
+                "items": [
+                    {
+                        "title": _("Empresas"),
+                        "icon": "business",
+                        "link": reverse_lazy("admin:tr4cking_rest_api_empresa_changelist"),
+                    },
+                    {
+                        "title": _("Empleados"),
+                        "icon": "people",
+                        "link": reverse_lazy("admin:tr4cking_rest_api_empleado_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": _("Geografía"),
+                "icon": "map",
+                "items": [
+                    {
+                        "title": _("Localidades"),
+                        "icon": "location_on",
+                        "link": reverse_lazy("admin:tr4cking_rest_api_localidad_changelist"),
+                    },
+                    {
+                        "title": _("Paradas"),
+                        "icon": "location_on",
+                        "link": reverse_lazy("admin:tr4cking_rest_api_parada_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": _("Transporte"),
+                "icon": "truck",
+                "items": [
+                    {
+                        "title": _("Buses"),
+                        "icon": "directions_bus",
+                        "link": reverse_lazy("admin:tr4cking_rest_api_bus_changelist"),
+                    },
+                    {
+                        "title": _("Asientos"),
+                        "icon": "event_seat",
+                        "link": reverse_lazy("admin:tr4cking_rest_api_asiento_changelist"),
+                    },
+                    {
+                        "title": _("Rutas"),
+                        "icon": "alt_route",
+                        "link": reverse_lazy("admin:tr4cking_rest_api_ruta_changelist"),
+                    },
+                    {
+                        "title": _("Detalles de Rutas"),
+                        "icon": "alt_route",
+                        "link": reverse_lazy("admin:tr4cking_rest_api_detalleruta_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": _("Viajes y Servicios"),
+                "icon": "calendar_today",
+                "items": [
+                    {
+                        "title": _("Viajes"),
+                        "icon": "commute",
+                        "link": reverse_lazy("admin:tr4cking_rest_api_viaje_changelist"),
+                    },
+                    {
+                        "title": _("Pasajes"),
+                        "icon": "confirmation_number",
+                        "link": reverse_lazy("admin:tr4cking_rest_api_pasaje_changelist"),
+                    },
+                    {
+                        "title": _("Reservas"),
+                        "icon": "book_online",
+                        "link": reverse_lazy("admin:tr4cking_rest_api_reserva_changelist"),
+                    },
+                    {
+                        "title": _("Encomiendas"),
+                        "icon": "local_shipping",
+                        "link": reverse_lazy("admin:tr4cking_rest_api_encomienda_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": _("Facturación"),
+                "icon": "document-text",
+                "items": [
+                    {
+                        "title": _("Tipos de Documento"),
+                        "icon": "description",
+                        "link": reverse_lazy("admin:tr4cking_rest_api_tipodocumento_changelist"),
+                    },
+                    {
+                        "title": _("Timbrados"),
+                        "icon": "description",
+                        "link": reverse_lazy("admin:tr4cking_rest_api_timbrado_changelist"),
+                    },
+                    {
+                        "title": _("Cabeceras de Factura"),
+                        "icon": "receipt_long",
+                        "link": reverse_lazy("admin:tr4cking_rest_api_cabecerafactura_changelist"),
+                    },
+                    {
+                        "title": _("Detalles de Factura"),
+                        "icon": "receipt_long",
+                        "link": reverse_lazy("admin:tr4cking_rest_api_detallefactura_changelist"),
+                    },
+                    {
+                        "title": _("Historial de Facturas"),
+                        "icon": "history",
+                        "link": reverse_lazy("admin:tr4cking_rest_api_historialfactura_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": _("Caja"),
+                "icon": "account_balance_wallet",
+                "items": [
+                    {
+                        "title": _("Cajas"),
+                        "icon": "account_balance",
+                        "link": reverse_lazy("admin:tr4cking_rest_api_caja_changelist"),
+                    },
+                    {
+                        "title": _("Cabeceras de Caja"),
+                        "icon": "account_balance",
+                        "link": reverse_lazy("admin:tr4cking_rest_api_cabeceracaja_changelist"),
+                    },
+                    {
+                        "title": _("Detalles de Caja"),
+                        "icon": "account_balance",
+                        "link": reverse_lazy("admin:tr4cking_rest_api_detallecaja_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": _("Configuración"),
+                "icon": "settings",
+                "items": [
+                    {
+                        "title": _("Usuarios"),
+                        "icon": "people",
+                        "link": reverse_lazy("admin:auth_user_changelist"),
+                    },
+                    {
+                        "title": _("Grupos"),
+                        "icon": "groups",
+                        "link": reverse_lazy("admin:auth_group_changelist"),
+                    },
+                ],
+            },
+        ],
+    },
+    "ENVIRONMENT": "development",
+    "DASHBOARD_CALLBACK": "tr4cking_rest_api.admin_views.dashboard_callback",
+}

@@ -4,6 +4,9 @@ from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.contrib import messages
+from django.urls import path
+from django.shortcuts import redirect
+from unfold.admin import ModelAdmin, TabularInline, StackedInline
 from .models import (
     Persona, UsuarioPersona, Cliente, Pasajero,
     Empresa, Empleado, Localidad, Parada,
@@ -13,32 +16,27 @@ from .models import (
     Caja, CabeceraCaja, DetalleCaja
 )
 
+
 admin.site.site_header = 'Tr4cking'
 admin.site.site_title = 'Tr4cking Admin Portal'
 admin.site.index_title = 'Bienvenido al Portal Administrativo de Tr4cking'
 
-# Personalización del tema de colores y estilos
-class CustomAdminSite(admin.AdminSite):
-    def each_context(self, request):
-        context = super().each_context(request)
-        context['custom_var'] = 'custom_value'  # Variables personalizadas
-        return context
 
 # Inline Models
-class UsuarioPersonaInline(admin.StackedInline):
+class UsuarioPersonaInline(StackedInline):
     model = UsuarioPersona
     can_delete = False
     verbose_name_plural = 'Información Personal'
 
-class DetalleRutaInline(admin.TabularInline):
+class DetalleRutaInline(TabularInline):
     model = DetalleRuta
     extra = 1
 
-class AsientoInline(admin.TabularInline):
+class AsientoInline(TabularInline):
     model = Asiento
     extra = 1
 
-class DetalleFacturaInline(admin.TabularInline):
+class DetalleFacturaInline(TabularInline):
     model = DetalleFactura
     extra = 1
     fields = ('pasaje', 'encomienda', 'cantidad', 'precio_unitario', 'iva_porcentaje', 'subtotal')
@@ -47,6 +45,11 @@ class DetalleFacturaInline(admin.TabularInline):
 # Custom User Admin
 class CustomUserAdmin(UserAdmin):
     inlines = (UsuarioPersonaInline,)
+    unfold_form_tabs = [
+        ("Información Personal", ["username", "password"]),
+        ("Permisos", ["is_active", "is_staff", "is_superuser", "groups", "user_permissions"]),
+        ("Fechas Importantes", ["last_login", "date_joined"]),
+    ]
 
 # Unregister the default User admin and register with custom
 admin.site.unregister(User)
@@ -54,13 +57,17 @@ admin.site.register(User, CustomUserAdmin)
 
 # Personas y Usuarios
 @admin.register(Persona)
-class PersonaAdmin(admin.ModelAdmin):
+class PersonaAdmin(ModelAdmin):
     list_display = ('cedula', 'nombre', 'apellido', 'telefono')
     search_fields = ('cedula', 'nombre', 'apellido')
     ordering = ('apellido', 'nombre')
+    unfold_form_tabs = [
+        ("Información Personal", ["cedula", "nombre", "apellido"]),
+        ("Contacto", ["telefono", "email"]),
+    ]
 
 @admin.register(Cliente)
-class ClienteAdmin(admin.ModelAdmin):
+class ClienteAdmin(ModelAdmin):
     list_display = ('id_cliente', 'get_nombre', 'dv', 'razon_social', 'fecha_registro')
     search_fields = ('cedula__nombre', 'cedula__apellido', 'razon_social')
     date_hierarchy = 'fecha_registro'
@@ -69,10 +76,14 @@ class ClienteAdmin(admin.ModelAdmin):
         return f"{obj.cedula.nombre} {obj.cedula.apellido}" if obj.cedula else "Sin persona"
     get_nombre.short_description = 'Nombre Completo'
 
+# Actualizar Pasajero
 @admin.register(Pasajero)
-class PasajeroAdmin(admin.ModelAdmin):
+class PasajeroAdmin(ModelAdmin):  # Cambiar a ModelAdmin de Unfold
     list_display = ('id_pasajero', 'get_nombre', 'get_cedula')
     search_fields = ('cedula__nombre', 'cedula__apellido', 'cedula__cedula')
+    unfold_form_tabs = [
+        ("Información Personal", ["cedula"]),
+    ]
     
     def get_nombre(self, obj):
         return f"{obj.cedula.nombre} {obj.cedula.apellido}"
@@ -84,40 +95,54 @@ class PasajeroAdmin(admin.ModelAdmin):
 
 # Empresas y Empleados
 @admin.register(Empresa)
-class EmpresaAdmin(admin.ModelAdmin):
+class EmpresaAdmin(ModelAdmin):
     list_display = ('nombre', 'ruc', 'telefono', 'email')
     search_fields = ('nombre', 'ruc')
+    unfold_form_tabs = [
+        ("Información Empresarial", ["nombre", "ruc"]),
+        ("Contacto", ["telefono", "email", "direccion"]),
+    ]
 
 @admin.register(Empleado)
-class EmpleadoAdmin(admin.ModelAdmin):
-    list_display = ('get_nombre', 'empresa', 'cargo', 'fecha_ingreso')
+class EmpleadoAdmin(ModelAdmin):
+    list_display = ('cedula__nombre', 'empresa', 'cargo', 'fecha_ingreso')
     list_filter = ('empresa', 'cargo')
     search_fields = ('cedula__nombre', 'cedula__apellido', 'cargo')
     date_hierarchy = 'fecha_ingreso'
-    
-    def get_nombre(self, obj):
-        return f"{obj.cedula.nombre} {obj.cedula.apellido}" if obj.cedula else "Sin persona"
-    get_nombre.short_description = 'Nombre Completo'
+    unfold_form_tabs = [
+        ("Información Personal", ["cedula"]),
+        ("Información Laboral", ["empresa", "cargo", "fecha_ingreso"]),
+    ]
 
 # Geografía
 @admin.register(Localidad)
-class LocalidadAdmin(admin.ModelAdmin):
+class LocalidadAdmin(ModelAdmin):
     list_display = ('nombre', 'coordenadas')
     search_fields = ('nombre',)
 
 @admin.register(Parada)
-class ParadaAdmin(admin.ModelAdmin):
+class ParadaAdmin(ModelAdmin):
     list_display = ('nombre', 'localidad', 'direccion', 'activo')
     list_filter = ('localidad', 'activo')
     search_fields = ('nombre', 'direccion')
+    unfold_form_tabs = [
+        ("Información General", ["nombre", "localidad"]),
+        ("Ubicación", ["direccion", "coordenadas"]),
+        ("Estado", ["activo"]),
+    ]
 
 # Transporte
 @admin.register(Bus)
-class BusAdmin(admin.ModelAdmin):
+class BusAdmin(ModelAdmin):
     list_display = ('placa', 'empresa', 'marca', 'modelo', 'capacidad', 'estado')
     list_filter = ('empresa', 'estado')
     search_fields = ('placa', 'marca', 'modelo')
     inlines = [AsientoInline]
+    unfold_form_tabs = [
+        ("Información del Bus", ["placa", "empresa", "marca", "modelo"]),
+        ("Capacidad", ["capacidad", "tipo_bus"]),
+        ("Estado", ["estado", "observaciones"]),
+    ]
 
 @admin.register(Asiento)
 class AsientoAdmin(admin.ModelAdmin):
@@ -127,11 +152,15 @@ class AsientoAdmin(admin.ModelAdmin):
 
 # Rutas
 @admin.register(Ruta)
-class RutaAdmin(admin.ModelAdmin):
+class RutaAdmin(ModelAdmin):
     list_display = ('nombre', 'activo', 'fecha_actualizacion')
     list_filter = ('activo',)
     search_fields = ('nombre',)
     inlines = [DetalleRutaInline]
+    unfold_form_tabs = [
+        ("Información de Ruta", ["nombre", "descripcion"]),
+        ("Estado", ["activo"]),
+    ]
 
 @admin.register(DetalleRuta)
 class DetalleRutaAdmin(admin.ModelAdmin):
@@ -141,12 +170,15 @@ class DetalleRutaAdmin(admin.ModelAdmin):
 
 # Viajes y Servicios
 @admin.register(Viaje)
-class ViajeAdmin(admin.ModelAdmin):
+class ViajeAdmin(ModelAdmin):
     list_display = ('ruta', 'bus', 'fecha', 'activo')
     list_filter = ('ruta', 'bus', 'activo')
     date_hierarchy = 'fecha'
     search_fields = ('ruta__nombre', 'bus__placa')
-
+    unfold_form_tabs = [
+        ("Información del Viaje", ["ruta", "bus", "fecha"]),
+        ("Estado", ["activo", "observaciones"]),
+    ]
     actions = ['marcar_como_activo', 'marcar_como_inactivo']
 
     def marcar_como_activo(self, request, queryset):
@@ -223,24 +255,25 @@ class CabeceraFacturaForm(forms.ModelForm):
         return cleaned_data
 
 @admin.register(CabeceraFactura)
-class CabeceraFacturaAdmin(admin.ModelAdmin):
+class CabeceraFacturaAdmin(ModelAdmin):
     form = CabeceraFacturaForm
     list_display = ('numero_factura', 'cliente', 'empleado', 'fecha_factura', 'monto_total', 'estado')
     list_filter = ('estado', 'condicion', 'timbrado')
     search_fields = ('numero_factura', 'cliente__razon_social')
     date_hierarchy = 'fecha_factura'
     inlines = [DetalleFacturaInline]
-    fieldsets = (
-        ('Información General', {
+    
+    unfold_form_tabs = [
+        ("Información General", {
             'fields': ('numero_factura', 'cliente', 'empleado', 'timbrado', 'parada')
         }),
-        ('Condiciones', {
+        ("Condiciones", {
             'fields': ('condicion', 'estado')
         }),
-        ('Montos', {
+        ("Montos", {
             'fields': ('monto_total', 'monto_exenta', 'monto_iva_5', 'monto_iva_10')
         }),
-    )
+    ]
 
     def has_add_permission(self, request):
         # Verificar si hay una caja abierta antes de mostrar el botón "Añadir"
@@ -294,28 +327,38 @@ class DetalleCajaInline(admin.TabularInline):
     extra = 1
 
 @admin.register(Caja)
-class CajaAdmin(admin.ModelAdmin):
+class CajaAdmin(ModelAdmin):
     list_display = ('nombre', 'estado', 'fecha_creacion', 'monto_inicial')
     list_filter = ('estado',)
     search_fields = ('nombre',)
     date_hierarchy = 'fecha_creacion'
+    unfold_form_tabs = [
+        ("Información de Caja", ["nombre", "monto_inicial"]),
+        ("Estado", ["estado"]),
+    ]
 
 @admin.register(CabeceraCaja)
-class CabeceraCajaAdmin(admin.ModelAdmin):
+class CabeceraCajaAdmin(ModelAdmin):
     list_display = ('caja', 'empleado', 'tipo_mov', 'fecha_mov', 'monto_inical', 'monto_final')
     list_filter = ('tipo_mov', 'caja')
     search_fields = ('caja__nombre', 'empleado__cedula__nombre')
     date_hierarchy = 'fecha_mov'
     inlines = [DetalleCajaInline]
+    unfold_form_tabs = [
+        ("Información de Movimiento", ["caja", "empleado", "tipo_mov"]),
+        ("Montos", ["monto_inical", "monto_final"]),
+    ]
 
 @admin.register(DetalleCaja)
-class DetalleCajaAdmin(admin.ModelAdmin):
-    list_display = ('cabecera_caja', 'tipo_transaccion', 'monto', 'fecha_transaccion', 'get_factura')
+class DetalleCajaAdmin(ModelAdmin):
+    list_display = ('cabecera_caja', 'tipo_transaccion', 'monto', 'fecha_transaccion', 'factura')
     list_filter = ('tipo_transaccion',)
     search_fields = ('descripcion', 'factura__numero_factura')
     date_hierarchy = 'fecha_transaccion'
+    unfold_form_tabs = [
+        ("Información de Transacción", ["cabecera_caja", "tipo_transaccion", "factura"]),
+        ("Detalles", ["monto", "descripcion"]),
+    ]
 
-    def get_factura(self, obj):
-        return obj.factura.numero_factura if obj.factura else '-'
-    get_factura.short_description = 'Factura'
+
 
